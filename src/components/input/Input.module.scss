@@ -1,0 +1,50 @@
+@import '../../assets/styles/variables.scss';
+
+.input {
+  background-color: transparent;
+  padding: 0.9rem 2rem;
+  border: 1px solid $light-grey;
+  border-radius: 30px;
+  transition: 0.1s all;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: flex-start;
+
+  &.inputError {
+    border: 1px solid red !important;
+  }
+
+  svg {
+    height: 1.3rem;
+    width: 1.3rem;
+
+    &.iconAfter {
+      cursor: pointer;
+    }
+  }
+
+  input {
+    font-size: 0.9rem;
+    color: $black;
+    outline: none;
+    border: 0;
+    flex: 1;
+    margin-left: 0.5rem;
+    background-color: transparent;
+
+    &::placeholder {
+      color: $dark-grey;
+      opacity: 1; /* Firefox */
+    }
+
+    &::-ms-input-placeholder {
+      /* Edge 12 -18 */
+      color: $dark-grey;
+    }
+  }
+
+  &:focus-within {
+    border-color: $black;
+  }
+}

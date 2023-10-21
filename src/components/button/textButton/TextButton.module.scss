@@ -1,0 +1,17 @@
+@import '../../../assets/styles/variables.scss';
+
+.textButton {
+  width: fit-content;
+
+  button {
+    background: transparent;
+    color: $black;
+    font-size: 0.8rem;
+    padding: 0;
+    text-decoration: underline;
+
+    &:hover {
+      background: transparent;
+    }
+  }
+}

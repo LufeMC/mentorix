@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { User } from '../types/user';
 import { devtools, persist } from 'zustand/middleware';
 
-interface UserState {
+export interface UserState {
   user: User | null;
   login: (_newUser: User) => void;
   logout: () => void;

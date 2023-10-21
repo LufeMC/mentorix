@@ -1,10 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
-import Test from './pages/test';
+import AuthPage from './pages/auth/AuthPage';
 
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <Test />,
+    path: '/auth',
+    element: <AuthPage />,
   },
 ]);
 
