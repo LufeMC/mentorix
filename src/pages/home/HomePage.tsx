@@ -1,3 +1,5 @@
+import styles from './HomePage.module.scss';
+
 export default function HomePage() {
-  return <span>HI</span>;
+  return <div className={styles.homePage}>HI</div>;
 }
