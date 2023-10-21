@@ -4,8 +4,10 @@ import styles from './Button.module.scss';
 interface ButtonProps {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   loading: boolean;
-  icon?: React.ElementType;
+  icon?: React.ReactNode;
   text?: string;
+  loadingText?: string;
+  disabled?: boolean;
 }
 
 export default function Button(props: ButtonProps) {
@@ -27,10 +29,10 @@ export default function Button(props: ButtonProps) {
   }, [props.loading]);
 
   return (
-    <button className={styles.button} onClick={props.onClick}>
-      {props.icon && <props.icon />}
+    <button className={styles.button} onClick={props.onClick} disabled={props.disabled}>
+      {props.icon && props.icon}
       {props.text && !props.loading && <span>{props.text}</span>}
-      {props.loading && `Loading${'.'.repeat(dotsCounter)}`}
+      {props.loading && `${props.loadingText ? props.loadingText : 'Loading'}${'.'.repeat(dotsCounter)}`}
     </button>
   );
 }

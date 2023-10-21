@@ -1,0 +1,20 @@
+.summary {
+  font-size: 1.2rem;
+  overflow: auto;
+
+  .emphasis {
+    font-weight: 600;
+    margin: 0 5px;
+    font-size: 1.5rem;
+  }
+
+  .emphasisIngredients {
+    font-weight: 600;
+    margin: 0 5px;
+    font-size: 1.5rem;
+
+    &:first-of-type {
+      margin-left: 0;
+    }
+  }
+}

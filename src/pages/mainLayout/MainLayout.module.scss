@@ -1,0 +1,18 @@
+@import '../../assets/styles/variables.scss';
+
+.mainLayout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+
+  .content {
+    padding: 2rem 5rem 0 5rem;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    align-content: flex-start;
+    justify-content: flex-start;
+    height: 100%;
+  }
+}

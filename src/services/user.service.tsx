@@ -10,10 +10,10 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 import { UserState } from '../stores/userStore';
+import { getCurrentDate } from '../utils/date';
 
 const authType = getAuth();
 const collectionRef = 'users';
-let validatingEmail = false;
 
 const getUser = async (firestore: Firestore, userId: string): Promise<User | string> => {
   const usersRef = doc(firestore, collectionRef, userId);
@@ -64,7 +64,13 @@ const signUp = async (
 ) => {
   createUserWithEmailAndPassword(auth, newUser.email, newUser.password)
     .then(async (userCredentials) => {
-      const user = { ...newUser, recipes: [] } as User;
+      const user = {
+        ...newUser,
+        recipes: [],
+        recipesGenerated: 0,
+        planRenewalDate: getCurrentDate(),
+        premium: false,
+      } as User;
       delete user.password;
 
       await setDoc(doc(firestore, 'users', userCredentials.user.uid), user);
@@ -123,7 +129,9 @@ const googleLogin = (
           name: userCredentials.displayName,
           email: userCredentials.email,
           recipes: [],
-          validated: true,
+          recipesGenerated: 0,
+          planRenewalDate: getCurrentDate(),
+          premium: false,
         } as User;
 
         await setDoc(doc(firestore, 'users', userCredentials.uid), user);
@@ -137,21 +145,6 @@ const googleLogin = (
     .catch((err) => {
       errorHandling(UserService.authErrorHandling(err));
     });
-};
-
-const validateUser = async (firestore: Firestore, userEmail: string) => {
-  if (!validatingEmail) {
-    validatingEmail = true;
-    const user = await getUserByEmail(firestore, userEmail);
-
-    if (typeof user !== 'string') {
-      await updateUser(firestore, user);
-
-      return true;
-    }
-
-    return false;
-  }
 };
 
 const authErrorHandling = (err: FirebaseError) => {
@@ -181,10 +174,11 @@ const authErrorHandling = (err: FirebaseError) => {
 
 const UserService = {
   getUser,
+  getUserByEmail,
+  updateUser,
   signUp,
   login,
   googleLogin,
-  validateUser,
   authErrorHandling,
 };
 

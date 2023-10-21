@@ -1,0 +1,46 @@
+@import '../../../assets/styles/variables.scss';
+
+.homePage {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  height: 100%;
+  overflow: hidden;
+
+  .content {
+    display: flex;
+    align-items: stretch;
+    align-content: flex-start;
+    justify-content: space-between;
+    overflow: hidden;
+    height: 100%;
+
+    .options {
+      flex: 7;
+      display: flex;
+      flex-direction: column;
+      padding-right: 1rem;
+      overflow: auto;
+    }
+
+    .summary {
+      border-left: 1px solid $black;
+      flex: 3;
+      padding-left: 1rem;
+      height: 95%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      align-content: flex-start;
+      justify-content: flex-start;
+
+      & > div {
+        flex: 1;
+      }
+
+      img {
+        height: 25px;
+      }
+    }
+  }
+}

@@ -6,3 +6,17 @@ export type Recipe = {
   ingredients: string[];
   instructions: string[];
 };
+
+export type RecipeOptions = {
+  servings: string[];
+  dietRestrictions: string[];
+  cuisine: string[];
+  mealType: string[];
+  ingredients: string[];
+};
+
+export type RecipeFilters = {
+  dietRestrictions: string;
+  cuisine: string;
+  ingredients: string;
+};

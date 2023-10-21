@@ -15,8 +15,16 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+  gap: 0.5rem;
 
   &:hover {
-    background: $middle-grey;
+    background: $dark-middle-grey;
+  }
+
+  &:disabled,
+  [disabled] {
+    background-color: $light-grey;
+    border-color: $light-grey;
+    cursor: default;
   }
 }
