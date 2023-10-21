@@ -5,7 +5,7 @@ import TextInput from '../../components/input/textInput/TextInput';
 import Background from '../../assets/img/background.png';
 import Logo from '../../assets/img/logo.svg';
 import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff, HiOutlineUserCircle } from 'react-icons/hi';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import Button from '../../components/button/Button';
 import TextButton from '../../components/button/textButton/TextButton';
 import GoogleButton from '../../components/whiteButton/googleButton/GoogleButton';
@@ -13,6 +13,7 @@ import { FirebaseContext } from '../../contexts/firebase-context';
 import useUserStore from '../../stores/userStore';
 import UserService from '../../services/user.service';
 import { useNavigate } from 'react-router-dom';
+import Checkbox from '../../components/checkbox/Checkbox';
 
 const modes = {
   login: 'login',
@@ -20,6 +21,7 @@ const modes = {
 };
 
 export default function AuthPage() {
+  const [initiated, setInitiated] = useState<boolean>(false);
   const [isPasswordShown, setIsPasswordShown] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [successText, setSuccessText] = useState<string>('Success');
@@ -29,10 +31,20 @@ export default function AuthPage() {
   const [mode, setMode] = useState<keyof typeof modes>('login');
   const [emailLoading, setEmailLoading] = useState<boolean>(false);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+  const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 
   const firebaseContext = useContext(FirebaseContext);
   const userStore = useUserStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userStore.user && successText === 'Success') {
+      navigate('/');
+    } else {
+      setInitiated(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formik = useFormik({
     initialValues: {
@@ -75,6 +87,11 @@ export default function AuthPage() {
         errors.push('name');
         errorMessages.push('Name is required');
       }
+
+      if (!acceptedTerms) {
+        errors.push('terms');
+        errorMessages.push('Pleace accept terms and conditions');
+      }
     }
 
     if (!trimmedEmail || !isValidEmail(trimmedEmail)) {
@@ -90,7 +107,7 @@ export default function AuthPage() {
     setValidationErrors(errors);
 
     if (errors.length > 0) {
-      const errorMessage = `Please fix the following fields: ${errorMessages.join(', ')}`;
+      const errorMessage = `${errorMessages.join('\n')}`;
       setError(errorMessage);
       return false;
     }
@@ -116,14 +133,15 @@ export default function AuthPage() {
     formik.handleSubmit();
   };
 
-  const changeMode = () => {
+  const changeMode = (newMode = '') => {
     setErrorText('Error');
     setValidationErrors([]);
     setIsPasswordShown(false);
+    setAcceptedTerms(false);
 
     formik.values.email = '';
     formik.values.password = '';
-    if (mode === 'login') {
+    if (mode === 'login' || newMode === 'signup') {
       setMode('signup');
       formik.values.name = '';
     } else {
@@ -136,6 +154,7 @@ export default function AuthPage() {
     setErrorText(error);
     setEmailLoading(false);
     setGoogleLoading(false);
+    setAcceptedTerms(false);
 
     setErrorTimeout(
       setTimeout(() => {
@@ -149,7 +168,9 @@ export default function AuthPage() {
     setSuccessText(success);
     setEmailLoading(false);
     setGoogleLoading(false);
+    setAcceptedTerms(false);
 
+    changeMode('login');
     setSuccessTimeout(
       setTimeout(
         () => {
@@ -169,76 +190,90 @@ export default function AuthPage() {
   };
 
   return (
-    <div className={styles.authPage}>
-      <div className={styles.image}>
-        <img src={Background} alt="food background" />
-      </div>
-      <div className={styles.loginBox}>
-        <img src={Logo} alt="cookii logo" className={styles.logo} />
-        <div>
-          <h1>Welcome!</h1>
-          <div className={styles.createAccount}>
-            <TextButton
-              text={mode === 'login' ? 'Create a free account' : 'Log in'}
-              onClick={changeMode}
-              loading={false}
+    initiated && (
+      <div className={styles.authPage}>
+        <div className={styles.image}>
+          <img src={Background} alt="food background" />
+        </div>
+        <div className={styles.loginBox}>
+          <img src={Logo} alt="cookii logo" className={styles.logo} />
+          <div>
+            <h1>Welcome!</h1>
+            <div className={styles.createAccount}>
+              <TextButton
+                text={mode === 'login' ? 'Create a free account' : 'Log in'}
+                onClick={() => changeMode()}
+                loading={false}
+              />
+              <span>or {mode === 'login' ? 'log in' : 'create a free account'} to enter Cookii</span>
+            </div>
+          </div>
+          <div>
+            <span className={successText !== 'Success' ? styles.success : styles.invisibleText}>{successText}</span>
+            <span className={errorText !== 'Error' ? styles.error : styles.invisibleText}>{errorText}</span>
+            {mode === 'signup' && (
+              <TextInput
+                title="Name"
+                id="name"
+                type="text"
+                placeholder="Enter your name"
+                value={formik.values.name as string}
+                onChange={formik.handleChange}
+                iconBefore={HiOutlineUserCircle}
+                hasError={validationErrors.includes('name')}
+              />
+            )}
+            <TextInput
+              title="Email"
+              id="email"
+              type="email"
+              placeholder="Enter your email address"
+              value={formik.values.email}
+              onChange={formik.handleChange}
+              iconBefore={HiOutlineMail}
+              hasError={validationErrors.includes('email')}
             />
-            <span>or {mode === 'login' ? 'log in' : 'create a free account'} to enter Cookii</span>
+            <TextInput
+              title="Password"
+              id="password"
+              type={isPasswordShown ? 'text' : 'password'}
+              placeholder="Enter your password"
+              value={formik.values.password}
+              onChange={formik.handleChange}
+              iconBefore={HiOutlineLockClosed}
+              iconAfter={isPasswordShown ? HiOutlineEye : HiOutlineEyeOff}
+              onIconAfterClick={() => setIsPasswordShown((prev) => !prev)}
+              hasError={validationErrors.includes('password')}
+            />
+            {mode === 'login' ? (
+              <div className={styles.forgotPassword}>
+                <TextButton text="Forgot password?" onClick={submitAuth} loading={false} />
+              </div>
+            ) : (
+              <Checkbox
+                text="Accept the Terms & Conditions, Privacy Policy and Cookies Policy"
+                checked={acceptedTerms}
+                onChange={setAcceptedTerms}
+                hasError={validationErrors.includes('terms')}
+                link="https://scratch-molybdenum-a71.notion.site/Cookii-30e07e8a4a88462d8bb4482f4741563e?pvs=4/"
+              />
+            )}
+            <Button text={mode === 'login' ? 'Log in' : 'Sign up'} onClick={submitAuth} loading={emailLoading} />
+          </div>
+          <div className={styles.or}>
+            <div />
+            <span>or</span>
+            <div />
+          </div>
+          <div>
+            <GoogleButton
+              onClick={googleLogin}
+              text={mode === 'login' ? 'Log in' : 'Sign up'}
+              loading={googleLoading}
+            />
           </div>
         </div>
-        <div>
-          <span className={successText !== 'Success' ? styles.success : styles.invisibleText}>{successText}</span>
-          <span className={errorText !== 'Error' ? styles.error : styles.invisibleText}>{errorText}</span>
-          {mode === 'signup' && (
-            <TextInput
-              title="Name"
-              id="name"
-              type="text"
-              placeholder="Enter your name"
-              value={formik.values.name as string}
-              onChange={formik.handleChange}
-              iconBefore={HiOutlineUserCircle}
-              hasError={validationErrors.includes('name')}
-            />
-          )}
-          <TextInput
-            title="Email"
-            id="email"
-            type="email"
-            placeholder="Enter your email address"
-            value={formik.values.email}
-            onChange={formik.handleChange}
-            iconBefore={HiOutlineMail}
-            hasError={validationErrors.includes('email')}
-          />
-          <TextInput
-            title="Password"
-            id="password"
-            type={isPasswordShown ? 'text' : 'password'}
-            placeholder="Enter your password"
-            value={formik.values.password}
-            onChange={formik.handleChange}
-            iconBefore={HiOutlineLockClosed}
-            iconAfter={isPasswordShown ? HiOutlineEye : HiOutlineEyeOff}
-            onIconAfterClick={() => setIsPasswordShown((prev) => !prev)}
-            hasError={validationErrors.includes('password')}
-          />
-          {mode === 'login' && (
-            <div className={styles.forgotPassword}>
-              <TextButton text="Forgot password?" onClick={submitAuth} loading={false} />
-            </div>
-          )}
-          <Button text={mode === 'login' ? 'Log in' : 'Sign up'} onClick={submitAuth} loading={emailLoading} />
-        </div>
-        <div className={styles.or}>
-          <div />
-          <span>or</span>
-          <div />
-        </div>
-        <div>
-          <GoogleButton onClick={googleLogin} text={mode === 'login' ? 'Log in' : 'Sign up'} loading={googleLoading} />
-        </div>
       </div>
-    </div>
+    )
   );
 }

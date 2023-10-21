@@ -69,7 +69,7 @@ const signUp = async (
 
       await setDoc(doc(firestore, 'users', userCredentials.user.uid), user);
       await sendEmailVerification(userCredentials.user);
-      successHandling('Sign up successfull! Now, enter your email and varify your account', false);
+      successHandling('Sign up successfull! Now, enter your email and verify your account', false);
     })
     .catch((err) => {
       errorHandling(UserService.authErrorHandling(err));

@@ -61,7 +61,7 @@
     width: 50%;
     padding: 0 5rem;
     height: 100%;
-    gap: 2.5rem;
+    gap: 1.5rem;
     position: relative;
 
     @media only screen and (max-width: 1000px) {
@@ -82,11 +82,13 @@
     .error {
       font-size: 0.8rem;
       color: red;
+      white-space: break-spaces;
     }
 
     .success {
       font-size: 0.8rem;
       color: green;
+      white-space: break-spaces;
     }
 
     .invisibleText {
