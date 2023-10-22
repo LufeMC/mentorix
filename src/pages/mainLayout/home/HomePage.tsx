@@ -1,4 +1,4 @@
-import { ChangeEvent, useMemo, useState } from 'react';
+import { ChangeEvent, useContext, useMemo, useState } from 'react';
 import styles from './HomePage.module.scss';
 import HomeSection from './section/HomeSection';
 import HomeItem from './item/HomeItem';
@@ -6,11 +6,15 @@ import { RecipeFilters, RecipeOptions } from '../../../types/recipe';
 import DietRestrictions from '../../../assets/jsons/dietRestrictions.json';
 import Cuisines from '../../../assets/jsons/cuisine.json';
 import Ingredients from '../../../assets/jsons/ingredients.json';
-import { capitalizeWordsInArray } from '../../../utils/string';
+import { capitalizeWordsInArray, jsxElementToStringWithWhitespace } from '../../../utils/string';
 import useUserStore from '../../../stores/userStore';
 import Summary from './summary/Summary';
 import Button from '../../../components/button/Button';
 import WhiteLogo from '../../../assets/img/logo-white.svg';
+import RecipeService from '../../../services/recipe.service';
+import { FirebaseContext } from '../../../contexts/firebase-context';
+import { useNavigate } from 'react-router-dom';
+import useRecipesStore from '../../../stores/recipesStore';
 
 // Define the initial options
 const initialOptions: RecipeOptions = {
@@ -30,8 +34,13 @@ const initialFilters: RecipeFilters = {
 
 export default function HomePage() {
   const userStore = useUserStore();
+  const recipesStore = useRecipesStore();
+  const firebaseContext = useContext(FirebaseContext);
+  const navigate = useNavigate();
   const rawOptions = useMemo<RecipeOptions>(() => initialOptions, []);
 
+  const [isError, setIsError] = useState<boolean>(false);
+  const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
   const [filteredOptions, setFilteredOptions] = useState<RecipeOptions>({
     servings: rawOptions.servings,
     dietRestrictions: rawOptions.dietRestrictions.slice(0, 10),
@@ -103,8 +112,29 @@ export default function HomePage() {
     }));
   };
 
-  const createRecipe = () => {
-    setLoadingRecipe(true);
+  const createRecipe = async () => {
+    if (!loadingRecipe) {
+      if (errorTimeout) {
+        clearTimeout(errorTimeout);
+      }
+      setLoadingRecipe(true);
+      recipesStore.createRecipe();
+      const formattedText = jsxElementToStringWithWhitespace(text);
+      try {
+        const recipe = await RecipeService.createRecipe(formattedText, firebaseContext.firestore, userStore);
+        navigate(`/recipes/${recipe.id}`);
+      } catch (err) {
+        setIsError(true);
+        setErrorTimeout(
+          setTimeout(() => {
+            setIsError(false);
+          }, 5000),
+        );
+      } finally {
+        setLoadingRecipe(false);
+        recipesStore.finishCreateRecipe();
+      }
+    }
   };
 
   const canCreateRecipe = () => {
@@ -179,6 +209,7 @@ export default function HomePage() {
         </div>
         <div className={styles.summary}>
           <Summary text={text} setText={setText} selectedItems={selectedItems} />
+          {isError && <span>An error occured. Try again later</span>}
           <Button
             text="Create recipe"
             onClick={createRecipe}

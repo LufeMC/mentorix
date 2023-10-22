@@ -73,7 +73,7 @@ const signUp = async (
       } as User;
       delete user.password;
 
-      await setDoc(doc(firestore, 'users', userCredentials.user.uid), user);
+      await setDoc(doc(firestore, collectionRef, userCredentials.user.uid), user);
       await sendEmailVerification(userCredentials.user);
       successHandling('Sign up successfull! Now, enter your email and verify your account', false);
     })
@@ -97,7 +97,7 @@ const login = async (
 
         if (typeof user !== 'string') {
           user.id = userCredentials.user.uid;
-          userStore.login(user);
+          userStore.update(user);
 
           successHandling('Login successfull!', true);
         }
@@ -134,10 +134,10 @@ const googleLogin = (
           premium: false,
         } as User;
 
-        await setDoc(doc(firestore, 'users', userCredentials.uid), user);
+        await setDoc(doc(firestore, collectionRef, userCredentials.uid), user);
 
         user.id = userCredentials.uid;
-        userStore.login(user);
+        userStore.update(user);
 
         successHandling('Login successfull!', true);
       }

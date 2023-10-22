@@ -32,7 +32,7 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
     const newUser = await UserService.getUser(firestore, user.uid);
 
     if (typeof newUser !== 'string' && user.emailVerified) {
-      userStore.login(newUser);
+      userStore.update(newUser);
     }
   };
 
