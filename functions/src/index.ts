@@ -1,13 +1,11 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
-const { getFirestore } = require('firebase-admin/firestore');
+const { initializeApp } = require('firebase-admin/app');
 import * as express from 'express';
 import * as cors from 'cors';
-import { mailchimp_handler } from './mailchimp_add_user';
 
 // initialize firebase inorder to access its services
-admin.initializeApp(functions.config().firebase);
-const db = getFirestore();
+initializeApp();
 
 // initialize express server
 const main = express();
@@ -23,6 +21,4 @@ main.use(cors(corsOpts));
 main.use('/v1', require('./routes/index'));
 
 // define google cloud function name
-export const ternAppAPI = functions.https.onRequest(main);
-export default db;
-export const addUserToList = functions.auth.user().onCreate(mailchimp_handler);
+export const cookiiAPI = functions.https.onRequest(main);

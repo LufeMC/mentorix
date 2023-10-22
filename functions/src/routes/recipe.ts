@@ -17,6 +17,7 @@ router.post('/', async (req, res) => {
   try {
     const response = await TravelAgentController.response(req.body.text);
     res.send(response);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     if (err.response) res.status(err.response.status).send(err.response.data);
     else res.status(500).send(err);

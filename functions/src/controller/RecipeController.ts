@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 import functions = require('firebase-functions');
 import OpenAI from 'openai';
 
@@ -9,7 +10,7 @@ const openai = new OpenAI({
 
 const response = async (text: string) => {
   try {
-    const prompt = `return a recipe for ${text}`;
+    const prompt = `return a recipe for ${text}. Make sure to include all the required fields in the schema for the JSON.`;
     //Define the JSON Schema by creating a schema object
     const schema = {
       type: 'object',
@@ -53,7 +54,7 @@ const response = async (text: string) => {
     const generatedText =
       completion.choices[0].message.function_call!.arguments;
 
-    return { generatedText };
+    return JSON.parse(generatedText);
   } catch (err) {
     throw err;
   }
