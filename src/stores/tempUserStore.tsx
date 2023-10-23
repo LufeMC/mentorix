@@ -27,7 +27,7 @@ const useTempUserStore = create<TempUserState & TempUserActions>()(
         tempStartLoggingIn: () => set(() => ({ tempLoggingIn: true })),
         tempDoneLoggingIn: () => set(() => ({ tempLoggingIn: false })),
         tempUpdate: (newTempUser: TempUser) => set(() => ({ tempUser: newTempUser, tempLoggingIn: false })),
-        tempLogout: () => set(() => ({ ...initialState, tempLoggingIn: false })),
+        tempLogout: () => set(() => ({ ...initialState, tempLoggingIn: true })),
       }),
       {
         name: 'userStore',

@@ -4,6 +4,7 @@ import MainLayout from './pages/mainLayout/MainLayout';
 import RecipePage from './pages/mainLayout/recipes/recipe/RecipePage';
 import HomePage from './pages/mainLayout/home/HomePage';
 import RecipesPage from './pages/mainLayout/recipes/RecipesPage';
+import Plans from './pages/mainLayout/plans/Plans';
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,10 @@ const router = createBrowserRouter([
       {
         path: 'recipes',
         element: <RecipesPage />,
+      },
+      {
+        path: 'plans/:checkoutSessionId?',
+        element: <Plans />,
       },
     ],
   },

@@ -11,6 +11,7 @@ export interface UserActions {
   update: (_newUser: User) => void;
   logout: () => void;
   startLoggingIn: () => void;
+  stopLoggingIn: () => void;
 }
 
 const initialState: UserState = {
@@ -24,8 +25,9 @@ const useUserStore = create<UserState & UserActions>()(
       (set) => ({
         ...initialState,
         startLoggingIn: () => set(() => ({ loggingIn: true })),
+        stopLoggingIn: () => set(() => ({ loggingIn: false })),
         update: (newUser: User) => set(() => ({ user: newUser, loggingIn: false })),
-        logout: () => set(() => ({ ...initialState, loggingIn: false })),
+        logout: () => set(() => ({ ...initialState, loggingIn: true })),
       }),
       {
         name: 'userStore',

@@ -47,6 +47,7 @@ const retrieveTempUser = async (firestore: Firestore, tempStore: TempUserActions
   tempStore.tempStartLoggingIn();
   const tempUser = await getTempUser(firestore);
   tempStore.tempUpdate(tempUser);
+  tempStore.tempDoneLoggingIn();
 };
 
 const IpAddressService = {

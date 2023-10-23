@@ -101,6 +101,7 @@ const login = async (
         if (typeof user !== 'string') {
           user.id = userCredentials.user.uid;
           userStore.update(user);
+          userStore.stopLoggingIn();
 
           successHandling('Login successfull!', true, redirectDestiny);
         }
@@ -150,6 +151,8 @@ const googleLogin = (
         }
 
         userStore.update(user as User);
+        userStore.stopLoggingIn();
+        userStore.stopLoggingIn();
 
         successHandling('Login successfull!', true, redirectDestiny);
       }

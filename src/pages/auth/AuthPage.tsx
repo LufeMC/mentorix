@@ -187,6 +187,7 @@ export default function AuthPage() {
 
     if (redirect && redirectDestiny) {
       tempStore.tempLogout();
+      tempStore.tempDoneLoggingIn();
       navigate(redirectDestiny);
     }
   };

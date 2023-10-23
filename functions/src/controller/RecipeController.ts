@@ -83,6 +83,6 @@ const response = async (text: string) => {
 /*
 Export
 */
-export const TravelAgentController = {
+export const RecipeController = {
   response,
 };

@@ -5,5 +5,6 @@ const router = Router();
 
 // itinerary building endpoints
 router.use('/recipe', require('./recipe'));
+router.use('/stripe', require('./stripe'));
 
 module.exports = router;

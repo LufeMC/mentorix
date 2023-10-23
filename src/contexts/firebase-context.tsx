@@ -31,12 +31,15 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
     userStore.startLoggingIn();
     tempStore.tempStartLoggingIn();
     if (!loading) {
-      recipeStore.logout();
+      recipeStore.recipes = [];
+      userStore.user = null;
+
       if (user) {
+        tempStore.tempUser = null;
+        tempStore.tempDoneLoggingIn();
         retrieveUser(user);
-        tempStore.tempLogout();
       } else {
-        userStore.logout();
+        userStore.stopLoggingIn();
         retrieveTempUser();
       }
     }
@@ -60,6 +63,7 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
 
       if (typeof newUser !== 'string' && user.emailVerified) {
         userStore.update(newUser);
+        userStore.stopLoggingIn();
         retrieveRecipes(newUser);
       }
     } else {

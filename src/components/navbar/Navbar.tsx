@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../../assets/img/logo.svg';
 import LogoWhite from '../../assets/img/logo-white.svg';
 import useUserStore from '../../stores/userStore';
@@ -22,18 +22,22 @@ export default function Navbar(props: NavbarProps) {
   const recipesStore = useRecipesStore();
   const firebaseContext = useContext(FirebaseContext);
   const alertContext = useContext(AlertContext);
+  const navigate = useNavigate();
 
   const logout = async () => {
     signOut(firebaseContext.auth);
-    userStore.logout();
-    recipesStore.logout();
+    recipesStore.recipes = [];
+    userStore.user = null;
     await IpAddressService.retrieveTempUser(firebaseContext.firestore, tempStore);
+
+    userStore.stopLoggingIn();
 
     const newAlert: Alert = {
       message: 'Logged out successfully',
       type: 'success',
     };
     alertContext.setAlert(newAlert);
+    navigate('/');
   };
 
   return (

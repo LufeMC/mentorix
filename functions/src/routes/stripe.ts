@@ -1,21 +1,23 @@
 import { Router } from 'express';
-import { RecipeController } from '../controller/RecipeController';
+import StripeController from '../controller/StripeController';
 
 const router = Router();
 
-router.post('/', async (req, res) => {
+router.get('/:sessionId', async (req, res) => {
   const errorObj = {
     success: false,
     error_message: '',
   };
 
-  if (!req.body.text) {
-    errorObj.error_message = 'Missing text field on request body';
+  if (!req.params.sessionId) {
+    errorObj.error_message = 'Missing session ID on request';
     res.status(400).json(errorObj);
   }
 
   try {
-    const response = await RecipeController.response(req.body.text);
+    const response = await StripeController.getSessionResult(
+      req.params.sessionId
+    );
     res.send(response);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
