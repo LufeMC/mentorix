@@ -9,6 +9,8 @@ import { FirebaseContext } from '../../contexts/firebase-context';
 import { signOut } from 'firebase/auth';
 import { AlertContext } from '../../contexts/alert-context';
 import { Alert } from '../../stores/alertStore';
+import IpAddressService from '../../services/ipAddress.service';
+import useTempUserStore from '../../stores/tempUserStore';
 
 interface NavbarProps {
   darkSchema?: boolean;
@@ -16,14 +18,16 @@ interface NavbarProps {
 
 export default function Navbar(props: NavbarProps) {
   const userStore = useUserStore();
+  const tempStore = useTempUserStore();
   const recipesStore = useRecipesStore();
   const firebaseContext = useContext(FirebaseContext);
   const alertContext = useContext(AlertContext);
 
   const logout = async () => {
     signOut(firebaseContext.auth);
-    await userStore.logout();
-    await recipesStore.logout();
+    userStore.logout();
+    recipesStore.logout();
+    await IpAddressService.retrieveTempUser(firebaseContext.firestore, tempStore);
 
     const newAlert: Alert = {
       message: 'Logged out successfully',
@@ -41,6 +45,7 @@ export default function Navbar(props: NavbarProps) {
       <div className={styles.mainOptions}>
         <img src={props.darkSchema ? LogoWhite : Logo} alt="logo" />
         {!userStore.loggingIn &&
+          !tempStore.tempLoggingIn &&
           (userStore.user ? (
             <div>
               <Link to={recipesStore.creatingRecipe ? '#' : '/'}>Home</Link>
@@ -54,6 +59,7 @@ export default function Navbar(props: NavbarProps) {
           ))}
       </div>
       {!userStore.loggingIn &&
+        !tempStore.tempLoggingIn &&
         (userStore.user ? (
           <button onClick={logout}>Logout</button>
         ) : (

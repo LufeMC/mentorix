@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import Checkbox from '../../components/checkbox/Checkbox';
 import { AlertContext } from '../../contexts/alert-context';
 import useAlertStore, { Alert } from '../../stores/alertStore';
+import useTempUserStore from '../../stores/tempUserStore';
 
 const modes = {
   login: 'login',
@@ -34,6 +35,7 @@ export default function AuthPage() {
   const firebaseContext = useContext(FirebaseContext);
   const alertContext = useContext(AlertContext);
   const userStore = useUserStore();
+  const tempStore = useTempUserStore();
   const alertStore = useAlertStore();
   const navigate = useNavigate();
 
@@ -184,6 +186,7 @@ export default function AuthPage() {
     changeMode('login');
 
     if (redirect && redirectDestiny) {
+      tempStore.tempLogout();
       navigate(redirectDestiny);
     }
   };

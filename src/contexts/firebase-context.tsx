@@ -6,6 +6,8 @@ import useUserStore from '../stores/userStore';
 import useRecipesStore from '../stores/recipesStore';
 import RecipeService from '../services/recipe.service';
 import { User } from '../types/user';
+import IpAddressService from '../services/ipAddress.service';
+import useTempUserStore from '../stores/tempUserStore';
 
 interface FirebaseContextProps {
   children?: ReactNode;
@@ -22,19 +24,28 @@ export const FirebaseContext = createContext<FirebaseContextValue>({} as Firebas
 export default function FirebaseProvider({ children }: FirebaseContextProps) {
   const [user, loading] = useAuthState(auth);
   const userStore = useUserStore();
+  const tempStore = useTempUserStore();
   const recipeStore = useRecipesStore();
 
   useEffect(() => {
+    userStore.startLoggingIn();
+    tempStore.tempStartLoggingIn();
     if (!loading) {
       recipeStore.logout();
       if (user) {
         retrieveUser(user);
+        tempStore.tempLogout();
       } else {
         userStore.logout();
+        retrieveTempUser();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
+
+  const retrieveTempUser = async () => {
+    await IpAddressService.retrieveTempUser(firestore, tempStore);
+  };
 
   const retrieveRecipes = async (user: User) => {
     const recipes = await RecipeService.getRecipes(firestore, user);

@@ -67,9 +67,19 @@
       }
 
       & > span {
-        color: red;
+        color: $dark-middle-grey;
         text-align: center;
-        font-size: 0.8rem;
+        font-weight: 500;
+        font-size: 1rem;
+
+        a {
+          text-decoration: underline;
+          color: $light-middle-grey;
+
+          &:hover {
+            color: $black;
+          }
+        }
       }
     }
   }

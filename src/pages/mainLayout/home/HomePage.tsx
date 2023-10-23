@@ -13,10 +13,11 @@ import Button from '../../../components/button/Button';
 import WhiteLogo from '../../../assets/img/logo-white.svg';
 import RecipeService from '../../../services/recipe.service';
 import { FirebaseContext } from '../../../contexts/firebase-context';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useRecipesStore from '../../../stores/recipesStore';
 import { AlertContext } from '../../../contexts/alert-context';
 import useAlertStore, { Alert } from '../../../stores/alertStore';
+import useTempUserStore from '../../../stores/tempUserStore';
 
 // Define the initial options
 const initialOptions: RecipeOptions = {
@@ -45,6 +46,7 @@ const initialFilters: RecipeFilters = {
 
 export default function HomePage() {
   const userStore = useUserStore();
+  const tempStore = useTempUserStore();
   const recipesStore = useRecipesStore();
   const alertStore = useAlertStore();
   const firebaseContext = useContext(FirebaseContext);
@@ -73,36 +75,38 @@ export default function HomePage() {
   const [loadingRecipe, setLoadingRecipe] = useState<boolean>(false);
 
   const addOrRemoveItem = (itemName: string, category: string, add: boolean, allowMultile: boolean) => {
-    let selectedItemsInCategory = [...selectedItems[category as keyof RecipeOptions]];
+    if (!tempStore.tempUser || (tempStore.tempUser && tempStore.tempUser.recipesGenerated < 5)) {
+      let selectedItemsInCategory = [...selectedItems[category as keyof RecipeOptions]];
 
-    if (add) {
-      if (allowMultile) {
-        selectedItemsInCategory.push(itemName);
+      if (add) {
+        if (allowMultile) {
+          selectedItemsInCategory.push(itemName);
+        } else {
+          selectedItemsInCategory = [itemName];
+        }
+
+        setSelectedItems((prevSelectedItems) => ({
+          ...prevSelectedItems,
+          [category]: allowMultile ? [...prevSelectedItems[category as keyof RecipeOptions], itemName] : [itemName],
+        }));
       } else {
-        selectedItemsInCategory = [itemName];
+        selectedItemsInCategory = selectedItemsInCategory.filter((item) => item !== itemName);
+        setSelectedItems((prevSelectedItems) => ({
+          ...prevSelectedItems,
+          [category]: prevSelectedItems[category as keyof RecipeOptions].filter((item) => item !== itemName),
+        }));
       }
 
-      setSelectedItems((prevSelectedItems) => ({
-        ...prevSelectedItems,
-        [category]: allowMultile ? [...prevSelectedItems[category as keyof RecipeOptions], itemName] : [itemName],
+      const updatedOptions = rawOptions[category as keyof RecipeOptions]
+        .filter((item) => !selectedItemsInCategory.includes(item))
+        .slice(0, category === 'ingredients' ? 25 : 10);
+
+      setFilteredOptions((prevFilteredOptions) => ({
+        ...prevFilteredOptions,
+        [category]: updatedOptions,
       }));
-    } else {
-      selectedItemsInCategory = selectedItemsInCategory.filter((item) => item !== itemName);
-      setSelectedItems((prevSelectedItems) => ({
-        ...prevSelectedItems,
-        [category]: prevSelectedItems[category as keyof RecipeOptions].filter((item) => item !== itemName),
-      }));
+      setFilters(initialFilters);
     }
-
-    const updatedOptions = rawOptions[category as keyof RecipeOptions]
-      .filter((item) => !selectedItemsInCategory.includes(item))
-      .slice(0, category === 'ingredients' ? 25 : 10);
-
-    setFilteredOptions((prevFilteredOptions) => ({
-      ...prevFilteredOptions,
-      [category]: updatedOptions,
-    }));
-    setFilters(initialFilters);
   };
 
   const filterOptions = (searchValue: string, category: string) => {
@@ -130,7 +134,7 @@ export default function HomePage() {
       recipesStore.createRecipe();
       const formattedText = jsxElementToStringWithWhitespace(text);
       try {
-        const recipe = await RecipeService.createRecipe(formattedText, firebaseContext.firestore, userStore);
+        const recipe = await RecipeService.createRecipe(formattedText, firebaseContext.firestore, userStore, tempStore);
         window.sessionStorage.setItem('recipeGenerated', recipe.id);
         navigate(`/recipes/${recipe.id}`);
       } catch (err) {
@@ -218,14 +222,21 @@ export default function HomePage() {
         </div>
         <div className={styles.summary}>
           <Summary text={text} setText={setText} selectedItems={selectedItems} />
-          <Button
-            text="Create recipe"
-            onClick={createRecipe}
-            loading={loadingRecipe}
-            loadingText="Creating recipe"
-            icon={<img src={WhiteLogo} alt="black_logo" />}
-            disabled={!canCreateRecipe()}
-          />
+          {!tempStore.tempUser || (tempStore.tempUser && tempStore.tempUser.recipesGenerated < 5) ? (
+            <Button
+              text="Create recipe"
+              onClick={createRecipe}
+              loading={loadingRecipe}
+              loadingText="Creating recipe"
+              icon={<img src={WhiteLogo} alt="black_logo" />}
+              disabled={!canCreateRecipe()}
+            />
+          ) : (
+            <span>
+              You reached the 5 recipes limit for non-users.{' '}
+              <Link to="/auth">Log in or create your account to continue creating delicious recipes</Link>
+            </span>
+          )}
         </div>
       </div>
     </div>

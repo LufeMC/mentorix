@@ -8,11 +8,19 @@ import { UserActions, UserState } from '../stores/userStore';
 import { RecipesActions } from '../stores/recipesStore';
 import { copyOrShareText } from '../utils/share';
 import { alertTypes } from '../stores/alertStore';
+import { TempUserActions, TempUserState } from '../stores/tempUserStore';
+import { TempUser } from '../types/tempUser';
+import IpAddressService from './ipAddress.service';
 
 const collectionRef = 'recipes';
 let retrievingRecipe = false;
 
-const createRecipe = async (text: string, firestore: Firestore, userStore?: UserState | UserActions) => {
+const createRecipe = async (
+  text: string,
+  firestore: Firestore,
+  userStore?: UserState | UserActions,
+  tempUserStore?: TempUserState | TempUserActions,
+) => {
   const response = await api.post<ApiResponse<Recipe>>('recipe', { text });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recipe: any = response.data;
@@ -27,6 +35,13 @@ const createRecipe = async (text: string, firestore: Firestore, userStore?: User
       firestore,
       { ...userCopy, recipesGenerated: userCopy.recipesGenerated + 1 },
       userStore as UserActions,
+    );
+  } else if (tempUserStore && (tempUserStore as TempUserState).tempUser) {
+    const tempUserCopy = structuredClone((tempUserStore as TempUserState).tempUser) as TempUser;
+    await IpAddressService.updateTempUser(
+      firestore,
+      { ...tempUserCopy, recipesGenerated: tempUserCopy.recipesGenerated + 1 },
+      tempUserStore as TempUserActions,
     );
   }
 
