@@ -15,6 +15,8 @@ import RecipeService from '../../../services/recipe.service';
 import { FirebaseContext } from '../../../contexts/firebase-context';
 import { useNavigate } from 'react-router-dom';
 import useRecipesStore from '../../../stores/recipesStore';
+import { AlertContext } from '../../../contexts/alert-context';
+import useAlertStore, { Alert } from '../../../stores/alertStore';
 
 // Define the initial options
 const initialOptions: RecipeOptions = {
@@ -44,12 +46,12 @@ const initialFilters: RecipeFilters = {
 export default function HomePage() {
   const userStore = useUserStore();
   const recipesStore = useRecipesStore();
+  const alertStore = useAlertStore();
   const firebaseContext = useContext(FirebaseContext);
+  const alertContext = useContext(AlertContext);
   const navigate = useNavigate();
   const rawOptions = useMemo<RecipeOptions>(() => initialOptions, []);
 
-  const [isError, setIsError] = useState<boolean>(false);
-  const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
   const [filteredOptions, setFilteredOptions] = useState<RecipeOptions>({
     servings: rawOptions.servings,
     dietRestrictions: rawOptions.dietRestrictions.slice(0, 10),
@@ -123,23 +125,20 @@ export default function HomePage() {
 
   const createRecipe = async () => {
     if (!loadingRecipe) {
-      if (errorTimeout) {
-        clearTimeout(errorTimeout);
-      }
+      alertStore.resetAlert();
       setLoadingRecipe(true);
       recipesStore.createRecipe();
       const formattedText = jsxElementToStringWithWhitespace(text);
       try {
-        const recipe = await RecipeService.createRecipe(formattedText, firebaseContext.firestore);
+        const recipe = await RecipeService.createRecipe(formattedText, firebaseContext.firestore, userStore);
         window.sessionStorage.setItem('recipeGenerated', recipe.id);
         navigate(`/recipes/${recipe.id}`);
       } catch (err) {
-        setIsError(true);
-        setErrorTimeout(
-          setTimeout(() => {
-            setIsError(false);
-          }, 5000),
-        );
+        const newAlert: Alert = {
+          message: 'An error occured. Try again later',
+          type: 'error',
+        };
+        alertContext.setAlert(newAlert);
       } finally {
         setLoadingRecipe(false);
         recipesStore.finishCreateRecipe();
@@ -219,7 +218,6 @@ export default function HomePage() {
         </div>
         <div className={styles.summary}>
           <Summary text={text} setText={setText} selectedItems={selectedItems} />
-          {isError && <span>An error occured. Try again later</span>}
           <Button
             text="Create recipe"
             onClick={createRecipe}

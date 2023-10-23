@@ -188,7 +188,7 @@ export default function AuthPage() {
     }
   };
 
-  const googleLogin = () => {
+  const googleLogin = async () => {
     setGoogleLoading(true);
     let redirectDestiny = '/';
     const recipeId = window.sessionStorage.getItem('recipeId');
@@ -198,7 +198,8 @@ export default function AuthPage() {
       window.sessionStorage.setItem('recipeGenerated', recipeId);
       window.sessionStorage.removeItem('recipeId');
     }
-    UserService.googleLogin(
+
+    await UserService.googleLogin(
       firebaseContext.auth,
       firebaseContext.firestore,
       userStore,

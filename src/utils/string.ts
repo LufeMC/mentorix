@@ -5,14 +5,16 @@ export const capitalizeWordsInArray = (arr: string[]) => {
   }
 
   // Iterate through the array and capitalize each word in each string
-  const capitalizedArray = arr.map((str) =>
-    str
-      .split(' ')
-      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' '),
-  );
+  const capitalizedArray = arr.map((str) => capitalizeWord(str));
 
   return capitalizedArray;
+};
+
+export const capitalizeWord = (word: string) => {
+  return word
+    .split(' ')
+    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };
 
 export const jsxElementToStringWithWhitespace = (element: JSX.Element) => {

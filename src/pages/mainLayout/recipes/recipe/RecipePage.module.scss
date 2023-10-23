@@ -23,6 +23,11 @@
     height: 100%;
     overflow: hidden;
 
+    @media only screen and (max-width: 700px) {
+      flex-direction: column-reverse;
+      overflow: auto;
+    }
+
     .instructionsContainer {
       flex: 7;
       padding: 4rem 2rem 0 3rem;
@@ -34,9 +39,23 @@
       gap: 3rem;
       overflow: hidden;
 
+      @media only screen and (max-width: 1000px) {
+        flex: 6;
+      }
+
+      @media only screen and (max-width: 700px) {
+        flex: auto;
+        overflow: visible;
+        padding: 4rem 2rem;
+      }
+
       h1 {
         color: $white;
         font-size: 2.5rem;
+
+        @media only screen and (max-width: 700px) {
+          display: none;
+        }
       }
 
       .instructions {
@@ -48,6 +67,10 @@
         gap: 2rem;
         width: 100%;
         overflow: hidden;
+
+        @media only screen and (max-width: 700px) {
+          overflow: auto;
+        }
 
         h2 {
           color: $white;
@@ -70,6 +93,25 @@
       justify-content: flex-start;
       padding: 4rem 3rem;
       overflow: hidden;
+
+      @media only screen and (max-width: 1000px) {
+        flex: 4;
+      }
+
+      @media only screen and (max-width: 700px) {
+        overflow: visible;
+        flex: auto;
+        padding: 4rem 2rem;
+      }
+
+      & > h1 {
+        display: none;
+
+        @media only screen and (max-width: 700px) {
+          display: flex;
+          margin-bottom: 2rem;
+        }
+      }
 
       .actions {
         display: flex;

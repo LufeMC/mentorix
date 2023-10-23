@@ -2,6 +2,7 @@ import { Recipe } from '../../../../../../types/recipe';
 import styles from './Details.module.scss';
 import { PiCookingPot, PiKnife } from 'react-icons/pi';
 import Checkbox from '../../../../../../components/checkbox/Checkbox';
+import { capitalizeWord } from '../../../../../../utils/string';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
@@ -26,8 +27,8 @@ export default function RecipeDetails(props: RecipeDetailsProps) {
           {props.recipe.ingredients.map((ingredient) => (
             <div className={styles.ingredient} key={ingredient.ingredient}>
               <Checkbox text="" onChange={() => {}} />
-              <span className={styles.quantity}>{ingredient.quantity}</span>
-              <span className={styles.ingredientName}>{ingredient.ingredient}</span>
+              <span className={styles.quantity}>{capitalizeWord(ingredient.quantity)}</span>
+              <span className={styles.ingredientName}>{capitalizeWord(ingredient.ingredient)}</span>
             </div>
           ))}
         </div>

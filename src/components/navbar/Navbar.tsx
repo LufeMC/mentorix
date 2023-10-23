@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
-import Logo from '../../../assets/img/logo.svg';
-import LogoWhite from '../../../assets/img/logo-white.svg';
-import useUserStore from '../../../stores/userStore';
+import Logo from '../../assets/img/logo.svg';
+import LogoWhite from '../../assets/img/logo-white.svg';
+import useUserStore from '../../stores/userStore';
 import styles from './Navbar.module.scss';
-import useRecipesStore from '../../../stores/recipesStore';
+import useRecipesStore from '../../stores/recipesStore';
 import { useContext } from 'react';
-import { FirebaseContext } from '../../../contexts/firebase-context';
+import { FirebaseContext } from '../../contexts/firebase-context';
 import { signOut } from 'firebase/auth';
-import { AlertContext } from '../../../contexts/alert-context';
-import { Alert } from '../../../stores/alertStore';
+import { AlertContext } from '../../contexts/alert-context';
+import { Alert } from '../../stores/alertStore';
 
 interface NavbarProps {
   darkSchema?: boolean;
@@ -44,8 +44,8 @@ export default function Navbar(props: NavbarProps) {
           (userStore.user ? (
             <div>
               <Link to={recipesStore.creatingRecipe ? '#' : '/'}>Home</Link>
-              <Link to={recipesStore.creatingRecipe ? '#' : '/'}>My Recipes</Link>
-              <Link to={recipesStore.creatingRecipe ? '#' : '/'}>My Plan</Link>
+              <Link to={recipesStore.creatingRecipe ? '#' : '/recipes'}>My Recipes</Link>
+              {/* <Link to={recipesStore.creatingRecipe ? '#' : '/'}>My Plan</Link> */}
             </div>
           ) : (
             <div>

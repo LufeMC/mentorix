@@ -7,7 +7,7 @@ interface RecipesState {
   creatingRecipe: boolean;
 }
 
-interface RecipesActions {
+export interface RecipesActions {
   createRecipe: () => void;
   finishCreateRecipe: () => void;
   changeRecipes: (_newRecipes: Recipe[]) => void;

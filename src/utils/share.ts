@@ -12,10 +12,10 @@ export function copyOrShareText(text: string, alertHandler: (_text: string, _typ
   } else {
     navigator.clipboard.writeText(text).then(
       function () {
-        alertHandler('Shared successfully', 'success');
+        alertHandler('Share text copied to clipboard', 'success');
       },
       function () {
-        alertHandler('Error sharing', 'error');
+        alertHandler('Error copying', 'error');
       },
     );
   }
