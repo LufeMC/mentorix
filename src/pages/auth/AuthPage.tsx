@@ -14,6 +14,8 @@ import useUserStore from '../../stores/userStore';
 import UserService from '../../services/user.service';
 import { useNavigate } from 'react-router-dom';
 import Checkbox from '../../components/checkbox/Checkbox';
+import { AlertContext } from '../../contexts/alert-context';
+import useAlertStore, { Alert } from '../../stores/alertStore';
 
 const modes = {
   login: 'login',
@@ -24,21 +26,19 @@ export default function AuthPage() {
   const [initiated, setInitiated] = useState<boolean>(false);
   const [isPasswordShown, setIsPasswordShown] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [successText, setSuccessText] = useState<string>('Success');
-  const [errorText, setErrorText] = useState<string>('Error');
-  const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [successTimeout, setSuccessTimeout] = useState<NodeJS.Timeout | null>(null);
   const [mode, setMode] = useState<keyof typeof modes>('login');
   const [emailLoading, setEmailLoading] = useState<boolean>(false);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 
   const firebaseContext = useContext(FirebaseContext);
+  const alertContext = useContext(AlertContext);
   const userStore = useUserStore();
+  const alertStore = useAlertStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (userStore.user && successText === 'Success') {
+    if (userStore.user && !alertStore.alert) {
       navigate('/');
     } else {
       setInitiated(true);
@@ -58,6 +58,15 @@ export default function AuthPage() {
         if (values.name) {
           await UserService.signUp(firebaseContext.auth, firebaseContext.firestore, values, setError, setSuccess);
         } else {
+          let redirectDestiny = '/';
+          const recipeId = window.sessionStorage.getItem('recipeId');
+
+          if (recipeId) {
+            redirectDestiny = `/recipes/${recipeId}`;
+            window.sessionStorage.setItem('recipeGenerated', recipeId);
+            window.sessionStorage.removeItem('recipeId');
+          }
+
           await UserService.login(
             firebaseContext.auth,
             firebaseContext.firestore,
@@ -65,6 +74,7 @@ export default function AuthPage() {
             userStore,
             setError,
             setSuccess,
+            redirectDestiny,
           );
         }
       } else {
@@ -112,7 +122,7 @@ export default function AuthPage() {
       return false;
     }
 
-    setErrorText('Error');
+    alertStore.resetAlert();
     setValidationErrors([]);
     return true;
   };
@@ -134,7 +144,7 @@ export default function AuthPage() {
   };
 
   const changeMode = (newMode = '') => {
-    setErrorText('Error');
+    alertStore.resetAlert();
     setValidationErrors([]);
     setIsPasswordShown(false);
     setAcceptedTerms(false);
@@ -150,43 +160,52 @@ export default function AuthPage() {
   };
 
   const setError = (error: string) => {
-    clearTimeout(errorTimeout as NodeJS.Timeout);
-    setErrorText(error);
+    const newAlert: Alert = {
+      message: error,
+      type: 'error',
+    };
+    alertContext.setAlert(newAlert);
     setEmailLoading(false);
     setGoogleLoading(false);
     setAcceptedTerms(false);
-
-    setErrorTimeout(
-      setTimeout(() => {
-        setErrorText('Error');
-      }, 5000),
-    );
   };
 
-  const setSuccess = (success: string, redirect: boolean) => {
-    clearTimeout(successTimeout as NodeJS.Timeout);
-    setSuccessText(success);
+  const setSuccess = (success: string, redirect: boolean, redirectDestiny?: string) => {
+    const newAlert: Alert = {
+      message: success,
+      type: 'success',
+    };
+    alertContext.setAlert(newAlert);
+
     setEmailLoading(false);
     setGoogleLoading(false);
     setAcceptedTerms(false);
 
     changeMode('login');
-    setSuccessTimeout(
-      setTimeout(
-        () => {
-          setSuccessText('Success');
-          if (redirect) {
-            navigate('/');
-          }
-        },
-        redirect ? 1000 : 5000,
-      ),
-    );
+
+    if (redirect && redirectDestiny) {
+      navigate(redirectDestiny);
+    }
   };
 
   const googleLogin = () => {
     setGoogleLoading(true);
-    UserService.googleLogin(firebaseContext.auth, firebaseContext.firestore, userStore, setError, setSuccess);
+    let redirectDestiny = '/';
+    const recipeId = window.sessionStorage.getItem('recipeId');
+
+    if (recipeId) {
+      redirectDestiny = `/recipes/${recipeId}`;
+      window.sessionStorage.setItem('recipeGenerated', recipeId);
+      window.sessionStorage.removeItem('recipeId');
+    }
+    UserService.googleLogin(
+      firebaseContext.auth,
+      firebaseContext.firestore,
+      userStore,
+      setError,
+      setSuccess,
+      redirectDestiny,
+    );
   };
 
   return (
@@ -209,8 +228,6 @@ export default function AuthPage() {
             </div>
           </div>
           <div>
-            <span className={successText !== 'Success' ? styles.success : styles.invisibleText}>{successText}</span>
-            <span className={errorText !== 'Error' ? styles.error : styles.invisibleText}>{errorText}</span>
             {mode === 'signup' && (
               <TextInput
                 title="Name"

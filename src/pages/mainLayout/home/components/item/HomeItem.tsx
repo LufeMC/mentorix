@@ -1,4 +1,4 @@
-import NoBorderInput from '../../../../components/input/noBorderInput/NoBorderInput';
+import NoBorderInput from '../../../../../components/input/noBorderInput/NoBorderInput';
 import styles from './HomeItem.module.scss';
 import HomeItemPill from './pill/HomeItemPill';
 import { HiOutlineSearch } from 'react-icons/hi';

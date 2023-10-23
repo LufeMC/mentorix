@@ -3,8 +3,14 @@ export type Recipe = {
   title: string;
   preparationTime: number;
   cookingTime: number;
-  ingredients: string[];
+  ingredients: Ingredient[];
   instructions: string[];
+  shareId: string;
+};
+
+type Ingredient = {
+  ingredient: string;
+  quantity: string;
 };
 
 export type RecipeOptions = {
@@ -19,4 +25,9 @@ export type RecipeFilters = {
   dietRestrictions: string;
   cuisine: string;
   ingredients: string;
+};
+
+export const recipeRedirects = {
+  share: 'share',
+  bookmark: 'bookmark',
 };

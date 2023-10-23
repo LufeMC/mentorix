@@ -1,0 +1,114 @@
+@import '../../../../assets/styles/variables.scss';
+
+.recipe {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(124deg, #323432 37.78%, #1e1f1e 105.14%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-content: flex-start;
+  justify-content: flex-start;
+  overflow: hidden;
+
+  .content {
+    display: flex;
+    align-content: flex-start;
+    align-items: stretch;
+    justify-content: space-between;
+    padding: 0.5rem;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 100%;
+    overflow: hidden;
+
+    .instructionsContainer {
+      flex: 7;
+      padding: 4rem 2rem 0 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      align-content: flex-start;
+      justify-content: flex-start;
+      gap: 3rem;
+      overflow: hidden;
+
+      h1 {
+        color: $white;
+        font-size: 2.5rem;
+      }
+
+      .instructions {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        align-content: flex-start;
+        justify-content: flex-start;
+        gap: 2rem;
+        width: 100%;
+        overflow: hidden;
+
+        h2 {
+          color: $white;
+        }
+
+        .steps {
+          overflow: auto;
+        }
+      }
+    }
+
+    .details {
+      flex: 3;
+      background-color: $white;
+      border-radius: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      align-content: flex-start;
+      justify-content: flex-start;
+      padding: 4rem 3rem;
+      overflow: hidden;
+
+      .actions {
+        display: flex;
+        align-items: center;
+        align-content: center;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1rem;
+
+        svg {
+          height: 20px;
+          width: 20px;
+          cursor: pointer;
+          color: $light-middle-grey;
+          transition: 0.1s all;
+
+          &:hover {
+            color: $black;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 5px;
+  border: 0;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background-color: $dark-grey;
+  border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: $green;
+  border-radius: 10px;
+}

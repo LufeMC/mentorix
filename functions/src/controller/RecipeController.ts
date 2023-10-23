@@ -10,14 +10,21 @@ const openai = new OpenAI({
 
 const response = async (text: string) => {
   try {
-    const prompt = `return a recipe for ${text}. Make sure to include all the required fields in the schema for the JSON.`;
+    const prompt = `return a recipe for ${text}. Make sure to include all
+    the required fields in the schema for the JSON. Be creative with the name
+    of the dish and be very specific about the instructions. Be like a
+    professional chef and write specifics about each instruction.
+    Also, make sure each ingredient have the quantity and name as specified
+    in the schema. Finally, make sure the recipe has every field specified.
+    DO NOT LET anything out!`;
     //Define the JSON Schema by creating a schema object
     const schema = {
       type: 'object',
       properties: {
         title: {
           type: 'string',
-          description: 'Descriptive title of the dish',
+          description:
+            'Title of the dish. Be creative with the title, making it sound delicious',
         },
         preparationTime: {
           type: 'string',
@@ -29,11 +36,24 @@ const response = async (text: string) => {
         },
         ingredients: {
           type: 'array',
-          items: { type: 'string' },
+          items: {
+            type: 'object',
+            properties: {
+              ingredient: {
+                type: 'string',
+                description: 'Ingredient name',
+              },
+              quantity: {
+                type: 'string',
+                description: 'Amount needed',
+              },
+            },
+          },
         },
         instructions: {
           type: 'array',
-          description: 'Steps to prepare the recipe.',
+          description:
+            'Steps to prepare the recipe. Be specific and detailed about each step',
           items: { type: 'string' },
         },
       },
@@ -44,7 +64,7 @@ const response = async (text: string) => {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo-0613',
       messages: [
-        { role: 'system', content: 'You are a helpful recipe assistant.' },
+        { role: 'system', content: 'You are a successful chef.' },
         { role: 'user', content: prompt },
       ],
       functions: [{ name: 'set_recipe', parameters: schema }],

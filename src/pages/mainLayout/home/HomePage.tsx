@@ -1,14 +1,14 @@
 import { ChangeEvent, useContext, useMemo, useState } from 'react';
 import styles from './HomePage.module.scss';
-import HomeSection from './section/HomeSection';
-import HomeItem from './item/HomeItem';
+import HomeSection from './components/section/HomeSection';
+import HomeItem from './components/item/HomeItem';
 import { RecipeFilters, RecipeOptions } from '../../../types/recipe';
 import DietRestrictions from '../../../assets/jsons/dietRestrictions.json';
 import Cuisines from '../../../assets/jsons/cuisine.json';
 import Ingredients from '../../../assets/jsons/ingredients.json';
 import { capitalizeWordsInArray, jsxElementToStringWithWhitespace } from '../../../utils/string';
 import useUserStore from '../../../stores/userStore';
-import Summary from './summary/Summary';
+import Summary from './components/summary/Summary';
 import Button from '../../../components/button/Button';
 import WhiteLogo from '../../../assets/img/logo-white.svg';
 import RecipeService from '../../../services/recipe.service';
@@ -21,7 +21,16 @@ const initialOptions: RecipeOptions = {
   servings: ['1 or 2', '3 or 4', '5 or 6', 'More than 6'],
   dietRestrictions: capitalizeWordsInArray(DietRestrictions),
   cuisine: capitalizeWordsInArray(Cuisines),
-  mealType: ['Breakfast', 'Morning snack', 'Lunch', 'Afternoon snack', 'Dinner', 'Evening snack'],
+  mealType: [
+    'Breakfast',
+    'Morning snack',
+    'Lunch',
+    'Afternoon snack',
+    'Dinner',
+    'Evening snack',
+    'Cocktail',
+    'Dessert',
+  ],
   ingredients: capitalizeWordsInArray(Ingredients),
 };
 
@@ -121,7 +130,8 @@ export default function HomePage() {
       recipesStore.createRecipe();
       const formattedText = jsxElementToStringWithWhitespace(text);
       try {
-        const recipe = await RecipeService.createRecipe(formattedText, firebaseContext.firestore, userStore);
+        const recipe = await RecipeService.createRecipe(formattedText, firebaseContext.firestore);
+        window.sessionStorage.setItem('recipeGenerated', recipe.id);
         navigate(`/recipes/${recipe.id}`);
       } catch (err) {
         setIsError(true);

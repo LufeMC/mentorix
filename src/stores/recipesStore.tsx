@@ -5,25 +5,34 @@ import { Recipe } from '../types/recipe';
 interface RecipesState {
   recipes: Recipe[];
   creatingRecipe: boolean;
+}
+
+interface RecipesActions {
   createRecipe: () => void;
   finishCreateRecipe: () => void;
+  changeRecipes: (_newRecipes: Recipe[]) => void;
   addRecipe: (_newRecipe: Recipe) => void;
   removeRecipe: (_recipeId: string) => void;
   logout: () => void;
 }
 
-const useRecipesStore = create<RecipesState>()(
+const initialState: RecipesState = {
+  recipes: [],
+  creatingRecipe: false,
+};
+
+const useRecipesStore = create<RecipesState & RecipesActions>()(
   devtools(
     persist(
       (set) => ({
-        recipes: [],
-        creatingRecipe: false,
+        ...initialState,
         createRecipe: () => set(() => ({ creatingRecipe: true })),
         finishCreateRecipe: () => set(() => ({ creatingRecipe: false })),
+        changeRecipes: (newRecipes: Recipe[]) => set(() => ({ recipes: newRecipes })),
         addRecipe: (newRecipe: Recipe) => set((state) => ({ recipes: [...state.recipes, newRecipe] })),
         removeRecipe: (recipeId: string) =>
           set((state) => ({ recipes: state.recipes.filter((recipe) => recipe.id !== recipeId) })),
-        logout: () => set(() => ({ recipes: [] })),
+        logout: () => set(initialState),
       }),
       {
         name: 'userStore',

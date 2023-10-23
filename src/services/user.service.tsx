@@ -9,7 +9,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth';
-import { UserState } from '../stores/userStore';
+import { UserActions } from '../stores/userStore';
 import { getCurrentDate } from '../utils/date';
 
 const authType = getAuth();
@@ -43,13 +43,14 @@ const getUserByEmail = async (firestore: Firestore, userEmail: string): Promise<
   }
 };
 
-const updateUser = async (firestore: Firestore, updatedUser: User): Promise<User | string> => {
+const updateUser = async (firestore: Firestore, updatedUser: User, userStore: UserActions): Promise<User | string> => {
   if (updatedUser.id) {
     const usersRef = doc(firestore, collectionRef, updatedUser.id);
 
     const userCopy = structuredClone(updatedUser);
     delete userCopy.id;
     await updateDoc(usersRef, userCopy);
+    userStore.update(updatedUser);
   }
 
   return 'No user provided';
@@ -86,20 +87,22 @@ const login = async (
   auth: typeof authType,
   firestore: Firestore,
   attemptedUser: UserLogin,
-  userStore: UserState,
+  userStore: UserActions,
   errorHandling: (_error: string) => void,
-  successHandling: (_success: string, _redirect: boolean) => void,
+  successHandling: (_success: string, _redirect: boolean, _redirectDestiny?: string) => void,
+  redirectDestiny: string,
 ) => {
   signInWithEmailAndPassword(auth, attemptedUser.email, attemptedUser.password)
     .then(async (userCredentials) => {
       if (userCredentials.user.emailVerified) {
+        userStore.startLoggingIn();
         const user = await UserService.getUser(firestore, userCredentials.user.uid);
 
         if (typeof user !== 'string') {
           user.id = userCredentials.user.uid;
           userStore.update(user);
 
-          successHandling('Login successfull!', true);
+          successHandling('Login successfull!', true, redirectDestiny);
         }
       } else {
         errorHandling('Please validate your email before continuing');
@@ -113,9 +116,10 @@ const login = async (
 const googleLogin = (
   auth: typeof authType,
   firestore: Firestore,
-  userStore: UserState,
+  userStore: UserActions,
   errorHandling: (_error: string) => void,
-  successHandling: (_success: string, _redirect: boolean) => void,
+  successHandling: (_success: string, _redirect: boolean, _redirectDestiny?: string) => void,
+  redirectDestiny: string,
 ) => {
   auth.useDeviceLanguage();
   const provider = new GoogleAuthProvider();
@@ -125,21 +129,29 @@ const googleLogin = (
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential) {
         const userCredentials = result.user;
-        const user = {
-          name: userCredentials.displayName,
-          email: userCredentials.email,
-          recipes: [],
-          recipesGenerated: 0,
-          planRenewalDate: getCurrentDate(),
-          premium: false,
-        } as User;
+        userStore.startLoggingIn();
 
-        await setDoc(doc(firestore, collectionRef, userCredentials.uid), user);
+        const existingUser = await getUser(firestore, userCredentials.uid);
+        let user = existingUser;
 
-        user.id = userCredentials.uid;
-        userStore.update(user);
+        if (typeof existingUser === 'string') {
+          user = {
+            name: userCredentials.displayName,
+            email: userCredentials.email,
+            recipes: [],
+            recipesGenerated: 0,
+            planRenewalDate: getCurrentDate(),
+            premium: false,
+          } as User;
 
-        successHandling('Login successfull!', true);
+          await setDoc(doc(firestore, collectionRef, userCredentials.uid), user); // change!
+
+          user.id = userCredentials.uid;
+        }
+
+        userStore.update(user as User);
+
+        successHandling('Login successfull!', true, redirectDestiny);
       }
     })
     .catch((err) => {

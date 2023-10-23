@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import AuthPage from './pages/auth/AuthPage';
 import MainLayout from './pages/mainLayout/MainLayout';
-import Recipe from './pages/mainLayout/recipes/recipe/Recipe';
+import RecipePage from './pages/mainLayout/recipes/recipe/RecipePage';
 
 const router = createBrowserRouter([
   {
@@ -10,7 +10,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/recipes/:recipeId',
-    element: <Recipe />,
+    element: <RecipePage />,
   },
   {
     path: '/auth',

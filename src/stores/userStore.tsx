@@ -4,17 +4,28 @@ import { devtools, persist } from 'zustand/middleware';
 
 export interface UserState {
   user: User | null;
-  update: (_newUser: User) => void;
-  logout: () => void;
+  loggingIn: boolean;
 }
 
-const useUserStore = create<UserState>()(
+export interface UserActions {
+  update: (_newUser: User) => void;
+  logout: () => void;
+  startLoggingIn: () => void;
+}
+
+const initialState: UserState = {
+  user: null,
+  loggingIn: true,
+};
+
+const useUserStore = create<UserState & UserActions>()(
   devtools(
     persist(
       (set) => ({
-        user: null,
-        update: (newUser: User) => set(() => ({ user: newUser })),
-        logout: () => set(() => ({ user: null })),
+        ...initialState,
+        startLoggingIn: () => set(() => ({ loggingIn: true })),
+        update: (newUser: User) => set(() => ({ user: newUser, loggingIn: false })),
+        logout: () => set(() => ({ ...initialState, loggingIn: false })),
       }),
       {
         name: 'userStore',

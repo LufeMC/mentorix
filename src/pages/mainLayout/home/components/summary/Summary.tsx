@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { RecipeOptions } from '../../../../types/recipe';
+import { RecipeOptions } from '../../../../../types/recipe';
 import styles from './Summary.module.scss';
 
 interface SummaryProps {

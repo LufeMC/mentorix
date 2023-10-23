@@ -3,7 +3,7 @@ import styles from './Checkbox.module.scss';
 interface CheckboxProps {
   text: string;
   onChange: React.Dispatch<React.SetStateAction<boolean>>;
-  checked: boolean;
+  checked?: boolean;
   hasError?: boolean;
   link?: string;
 }

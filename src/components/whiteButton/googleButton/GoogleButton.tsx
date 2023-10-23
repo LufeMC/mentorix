@@ -9,6 +9,11 @@ interface GoogleButtonProps {
 
 export default function GoogleButton(props: GoogleButtonProps) {
   return (
-    <WhiteButton icon={FcGoogle} onClick={props.onClick} text={`${props.text} with Google`} loading={props.loading} />
+    <WhiteButton
+      icon={<FcGoogle />}
+      onClick={props.onClick}
+      text={`${props.text} with Google`}
+      loading={props.loading}
+    />
   );
 }

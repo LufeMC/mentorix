@@ -4,6 +4,11 @@ import LogoWhite from '../../../assets/img/logo-white.svg';
 import useUserStore from '../../../stores/userStore';
 import styles from './Navbar.module.scss';
 import useRecipesStore from '../../../stores/recipesStore';
+import { useContext } from 'react';
+import { FirebaseContext } from '../../../contexts/firebase-context';
+import { signOut } from 'firebase/auth';
+import { AlertContext } from '../../../contexts/alert-context';
+import { Alert } from '../../../stores/alertStore';
 
 interface NavbarProps {
   darkSchema?: boolean;
@@ -12,10 +17,19 @@ interface NavbarProps {
 export default function Navbar(props: NavbarProps) {
   const userStore = useUserStore();
   const recipesStore = useRecipesStore();
+  const firebaseContext = useContext(FirebaseContext);
+  const alertContext = useContext(AlertContext);
 
-  const logout = () => {
-    userStore.logout();
-    recipesStore.logout();
+  const logout = async () => {
+    signOut(firebaseContext.auth);
+    await userStore.logout();
+    await recipesStore.logout();
+
+    const newAlert: Alert = {
+      message: 'Logged out successfully',
+      type: 'success',
+    };
+    alertContext.setAlert(newAlert);
   };
 
   return (
@@ -26,19 +40,25 @@ export default function Navbar(props: NavbarProps) {
     >
       <div className={styles.mainOptions}>
         <img src={props.darkSchema ? LogoWhite : Logo} alt="logo" />
-        <Link to={recipesStore.creatingRecipe ? '#' : '/'}>Home</Link>
-        {userStore.user && (
-          <div>
-            <Link to={recipesStore.creatingRecipe ? '#' : '/'}>My Recipes</Link>
-            <Link to={recipesStore.creatingRecipe ? '#' : '/'}>My Plan</Link>
-          </div>
-        )}
+        {!userStore.loggingIn &&
+          (userStore.user ? (
+            <div>
+              <Link to={recipesStore.creatingRecipe ? '#' : '/'}>Home</Link>
+              <Link to={recipesStore.creatingRecipe ? '#' : '/'}>My Recipes</Link>
+              <Link to={recipesStore.creatingRecipe ? '#' : '/'}>My Plan</Link>
+            </div>
+          ) : (
+            <div>
+              <Link to={recipesStore.creatingRecipe ? '#' : '/'}>Home</Link>
+            </div>
+          ))}
       </div>
-      {userStore.user ? (
-        <button onClick={logout}>Logout</button>
-      ) : (
-        <Link to={recipesStore.creatingRecipe ? '#' : '/auth'}>Login</Link>
-      )}
+      {!userStore.loggingIn &&
+        (userStore.user ? (
+          <button onClick={logout}>Logout</button>
+        ) : (
+          <Link to={recipesStore.creatingRecipe ? '#' : '/auth'}>Login</Link>
+        ))}
     </nav>
   );
 }
