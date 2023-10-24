@@ -116,15 +116,19 @@ export default function RecipePage() {
     if (!user) {
       redirectToAuth(recipe!.id, 'bookmark');
     } else {
-      await RecipeService.bookmarkRecipe(
-        firebaseContext.firestore,
-        user,
-        setUser,
-        recipes,
-        setRecipes,
-        newRecipe,
-        recipe,
-      );
+      if (!user.premium) {
+        navigate('/recipes');
+      } else {
+        await RecipeService.bookmarkRecipe(
+          firebaseContext.firestore,
+          user,
+          setUser,
+          recipes,
+          setRecipes,
+          newRecipe,
+          recipe,
+        );
+      }
     }
   };
 
@@ -156,17 +160,12 @@ export default function RecipePage() {
             <h1>{recipe.title}</h1>
             <RecipeDetails recipe={recipe} />
             <div className={styles.actions}>
-              {user?.premium ? (
-                user && user.recipes.includes(recipe.id) ? (
-                  <BsBookmarkFill onClick={() => unbookmarkRecipe()} />
-                ) : (
-                  <BsBookmark onClick={() => bookmarkRecipe()} />
-                )
-              ) : null}
-              {((user && user.recipes.includes(recipe.id)) ||
-                window.sessionStorage.getItem('recipeGenerated') === recipe.id) && (
-                <LuShare onClick={() => shareRecipe()} />
+              {user && user.recipes.includes(recipe.id) ? (
+                <BsBookmarkFill onClick={() => unbookmarkRecipe()} />
+              ) : (
+                <BsBookmark onClick={() => bookmarkRecipe()} />
               )}
+              <LuShare onClick={() => shareRecipe()} />
             </div>
           </div>
         </div>

@@ -35,6 +35,19 @@
     }
   }
 
+  .logOptions {
+    display: flex;
+    align-items: center;
+    align-content: center;
+    justify-content: flex-end;
+    gap: 1rem;
+
+    svg {
+      height: 20px;
+      width: 20px;
+    }
+  }
+
   a,
   button {
     font-weight: bold;

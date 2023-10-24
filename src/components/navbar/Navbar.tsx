@@ -13,6 +13,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { LoadingRecipeAtom, RecipesAtom } from '../../stores/recipesStore';
 import { UserAtom } from '../../stores/userStore';
 import { TempUserAtom } from '../../stores/tempUserStore';
+import { AiOutlineMail } from 'react-icons/ai';
 
 interface NavbarProps {
   darkSchema?: boolean;
@@ -67,8 +68,14 @@ export default function Navbar(props: NavbarProps) {
             </div>
           ))}
       </div>
-      {!loadingLog &&
-        (user ? <button onClick={logout}>Logout</button> : <Link to={loadingRecipe ? '#' : '/auth'}>Login</Link>)}
+      {!loadingLog && (
+        <div className={styles.logOptions}>
+          <a href="mailto: luisf.moncer@gmail.com">
+            <AiOutlineMail />
+          </a>
+          {user ? <button onClick={logout}>Logout</button> : <Link to={loadingRecipe ? '#' : '/auth'}>Login</Link>}
+        </div>
+      )}
     </nav>
   );
 }
