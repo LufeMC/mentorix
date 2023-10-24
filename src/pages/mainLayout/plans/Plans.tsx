@@ -103,8 +103,10 @@ export default function Plans() {
               onClick={() =>
                 window.open(
                   userAtom?.premium
-                    ? 'https://billing.stripe.com/p/login/test_14keYK52Y8Td6yI8ww'
-                    : 'https://buy.stripe.com/test_fZeg0qajF0S079S3cc',
+                    ? // ? 'https://billing.stripe.com/p/login/test_14keYK52Y8Td6yI8ww'
+                      'https://billing.stripe.com/p/login/6oE4k5cw8cxZc483cc'
+                    : // : 'https://buy.stripe.com/test_fZeg0qajF0S079S3cc',
+                      'https://buy.stripe.com/cN22b6ePh8du3Ru288',
                   '_blank',
                 )
               }

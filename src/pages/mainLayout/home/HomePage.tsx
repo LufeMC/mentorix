@@ -35,6 +35,7 @@ const initialOptions: RecipeOptions = {
     'Evening snack',
     'Cocktail',
     'Dessert',
+    'Midnight snack',
   ],
   ingredients: capitalizeWordsInArray(Ingredients),
 };
