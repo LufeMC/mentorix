@@ -7,6 +7,7 @@ export type User = {
   premium: boolean;
   password?: string;
   id?: string;
+  customerId?: string;
 };
 
 export type UserLogin = {

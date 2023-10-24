@@ -9,6 +9,8 @@ import UserService from '../../../services/user.service';
 import { FirebaseContext } from '../../../contexts/firebase-context';
 import { User } from '../../../types/user';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import styles from './Plans.module.scss';
+import WhiteButton from '../../../components/whiteButton/WhiteButton';
 
 export default function Plans() {
   const { checkoutSessionId } = useParams();
@@ -53,6 +55,7 @@ export default function Plans() {
         const userCopy = structuredClone(userStore.user);
         userCopy!.premium = true;
         userCopy!.planRenewalDate = getCurrentDate();
+        userCopy!.customerId = checkoutSession.customer;
 
         UserService.updateUser(firebaseContext.firestore, userCopy as User, userStore);
         navigate('/plans');
@@ -66,5 +69,46 @@ export default function Plans() {
     }
   };
 
-  return <div></div>;
+  return (
+    <div className={styles.plansContainer}>
+      <h1>Plans</h1>
+      <div className={styles.plans}>
+        <div className={styles.plan}>
+          <div className={styles.content}>
+            <h2>Free plan{!userStore.user?.premium ? ' (Your plan)' : ''}</h2>
+            <h2>$0/month</h2>
+            <ul>
+              <li>20 recipes per month</li>
+              <li>No saved recipes</li>
+            </ul>
+          </div>
+          <div className={styles.actions}></div>
+        </div>
+        <div className={styles.plan}>
+          <div className={styles.content}>
+            <h2>Premium plan{userStore.user?.premium ? ' (Your plan)' : ''}</h2>
+            <h2>$5/month</h2>
+            <ul>
+              <li>Unlimited recipes per month</li>
+              <li>Unlimited saved recipes</li>
+            </ul>
+          </div>
+          <div className={styles.actions}>
+            <WhiteButton
+              text={userStore.user?.premium ? 'Manage your plan' : 'Select this plan'}
+              loading={false}
+              onClick={() =>
+                window.open(
+                  userStore.user?.premium
+                    ? 'https://billing.stripe.com/p/login/test_14keYK52Y8Td6yI8ww'
+                    : 'https://buy.stripe.com/test_fZeg0qajF0S079S3cc',
+                  '_blank',
+                )
+              }
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

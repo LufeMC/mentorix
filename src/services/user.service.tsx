@@ -50,6 +50,7 @@ const updateUser = async (firestore: Firestore, updatedUser: User, userStore: Us
     const userCopy = structuredClone(updatedUser);
     delete userCopy.id;
     await updateDoc(usersRef, userCopy);
+    delete userCopy.customerId;
     userStore.update(updatedUser);
   }
 

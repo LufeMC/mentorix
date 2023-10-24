@@ -8,6 +8,7 @@ import RecipeService from '../services/recipe.service';
 import { User } from '../types/user';
 import IpAddressService from '../services/ipAddress.service';
 import useTempUserStore from '../stores/tempUserStore';
+import { getCurrentDate, isOneMonthAfter } from '../utils/date';
 
 interface FirebaseContextProps {
   children?: ReactNode;
@@ -55,19 +56,32 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
     recipeStore.changeRecipes(recipes);
   };
 
+  const checkIf1MonthLater = async (user: User) => {
+    if (user) {
+      const shouldRenewThePlan = isOneMonthAfter(getCurrentDate(), user!.planRenewalDate);
+      if (shouldRenewThePlan) {
+        const userCopy = structuredClone(user);
+        userCopy!.planRenewalDate = getCurrentDate();
+
+        if (!userCopy!.customerId) {
+          userCopy.premium = false;
+        }
+
+        UserService.updateUser(firestore, userCopy as User, userStore);
+      }
+    }
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const retrieveUser = async (user: any) => {
-    if (!userStore.user) {
-      userStore.startLoggingIn();
-      const newUser = await UserService.getUser(firestore, user.uid);
+    userStore.startLoggingIn();
+    const newUser = await UserService.getUser(firestore, user.uid);
 
-      if (typeof newUser !== 'string' && user.emailVerified) {
-        userStore.update(newUser);
-        userStore.stopLoggingIn();
-        retrieveRecipes(newUser);
-      }
-    } else {
-      retrieveRecipes(userStore.user);
+    if (typeof newUser !== 'string' && user.emailVerified) {
+      userStore.update(newUser);
+      userStore.stopLoggingIn();
+      retrieveRecipes(newUser);
+      await checkIf1MonthLater(newUser);
     }
   };
 
