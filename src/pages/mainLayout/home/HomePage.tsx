@@ -7,17 +7,18 @@ import DietRestrictions from '../../../assets/jsons/dietRestrictions.json';
 import Cuisines from '../../../assets/jsons/cuisine.json';
 import Ingredients from '../../../assets/jsons/ingredients.json';
 import { capitalizeWordsInArray, jsxElementToStringWithWhitespace } from '../../../utils/string';
-import useUserStore from '../../../stores/userStore';
 import Summary from './components/summary/Summary';
 import Button from '../../../components/button/Button';
 import WhiteLogo from '../../../assets/img/logo-white.svg';
 import RecipeService from '../../../services/recipe.service';
 import { FirebaseContext } from '../../../contexts/firebase-context';
 import { Link, useNavigate } from 'react-router-dom';
-import useRecipesStore from '../../../stores/recipesStore';
 import { AlertContext } from '../../../contexts/alert-context';
-import useAlertStore, { Alert } from '../../../stores/alertStore';
-import useTempUserStore from '../../../stores/tempUserStore';
+import { Alert } from '../../../stores/alertStore';
+import { useAtom } from 'jotai';
+import { UserAtom } from '../../../stores/userStore';
+import { TempUserAtom } from '../../../stores/tempUserStore';
+import { LoadingRecipeAtom } from '../../../stores/recipesStore';
 
 // Define the initial options
 const initialOptions: RecipeOptions = {
@@ -45,10 +46,9 @@ const initialFilters: RecipeFilters = {
 };
 
 export default function HomePage() {
-  const userStore = useUserStore();
-  const tempStore = useTempUserStore();
-  const recipesStore = useRecipesStore();
-  const alertStore = useAlertStore();
+  const [user, setUser] = useAtom(UserAtom);
+  const [tempUser, setTempUser] = useAtom(TempUserAtom);
+  const [loadingRecipe, setLoadingRecipe] = useAtom(LoadingRecipeAtom);
   const firebaseContext = useContext(FirebaseContext);
   const alertContext = useContext(AlertContext);
   const navigate = useNavigate();
@@ -72,10 +72,9 @@ export default function HomePage() {
 
   const [filters, setFilters] = useState<RecipeFilters>(initialFilters);
   const [text, setText] = useState<JSX.Element>(<></>);
-  const [loadingRecipe, setLoadingRecipe] = useState<boolean>(false);
 
   const addOrRemoveItem = (itemName: string, category: string, add: boolean, allowMultile: boolean) => {
-    if (!tempStore.tempUser || (tempStore.tempUser && tempStore.tempUser.recipesGenerated < 5)) {
+    if (!tempUser || (tempUser && tempUser.recipesGenerated < 5)) {
       let selectedItemsInCategory = [...selectedItems[category as keyof RecipeOptions]];
 
       if (add) {
@@ -129,12 +128,18 @@ export default function HomePage() {
 
   const createRecipe = async () => {
     if (!loadingRecipe) {
-      alertStore.resetAlert();
+      alertContext.resetAlert();
       setLoadingRecipe(true);
-      recipesStore.createRecipe();
       const formattedText = jsxElementToStringWithWhitespace(text);
       try {
-        const recipe = await RecipeService.createRecipe(formattedText, firebaseContext.firestore, userStore, tempStore);
+        const recipe = await RecipeService.createRecipe(
+          formattedText,
+          firebaseContext.firestore,
+          user,
+          setUser,
+          tempUser,
+          setTempUser,
+        );
         window.sessionStorage.setItem('recipeGenerated', recipe.id);
         navigate(`/recipes/${recipe.id}`);
       } catch (err) {
@@ -142,10 +147,9 @@ export default function HomePage() {
           message: 'An error occured. Try again later',
           type: 'error',
         };
-        alertContext.setAlert(newAlert);
+        alertContext.startAlert(newAlert);
       } finally {
         setLoadingRecipe(false);
-        recipesStore.finishCreateRecipe();
       }
     }
   };
@@ -161,7 +165,7 @@ export default function HomePage() {
 
   return (
     <div className={styles.homePage}>
-      <h1>Welcome{userStore.user ? `, ${userStore.user.name}!` : '!'} What are we cooking today?</h1>
+      <h1>Welcome{user ? `, ${user.name}!` : '!'} What are we cooking today?</h1>
       <span>Select at least one ingredient or one basic details item</span>
       <div className={styles.content}>
         <div className={styles.options}>
@@ -222,15 +226,24 @@ export default function HomePage() {
         </div>
         <div className={styles.summary}>
           <Summary text={text} setText={setText} selectedItems={selectedItems} />
-          {!tempStore.tempUser || (tempStore.tempUser && tempStore.tempUser.recipesGenerated < 5) ? (
-            <Button
-              text="Create recipe"
-              onClick={createRecipe}
-              loading={loadingRecipe}
-              loadingText="Creating recipe"
-              icon={<img src={WhiteLogo} alt="black_logo" />}
-              disabled={!canCreateRecipe()}
-            />
+          {!tempUser || (tempUser && tempUser.recipesGenerated < 5) ? (
+            (user && !user?.premium && user!.recipesGenerated < 20) ||
+            (tempUser && tempUser.recipesGenerated < 5) ||
+            user?.premium ? (
+              <Button
+                text="Create recipe"
+                onClick={createRecipe}
+                loading={loadingRecipe}
+                loadingText="Creating recipe"
+                icon={<img src={WhiteLogo} alt="black_logo" />}
+                disabled={!canCreateRecipe()}
+              />
+            ) : (
+              <span>
+                You reached the 20 recipes limit for free users.{' '}
+                <Link to="/plans">Upgrade to continue creating delicious recipes</Link>
+              </span>
+            )
           ) : (
             <span>
               You reached the 5 recipes limit for non-users.{' '}

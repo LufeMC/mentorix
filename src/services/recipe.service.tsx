@@ -4,11 +4,8 @@ import { ApiResponse, api } from './api.service';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../types/user';
 import UserService from './user.service';
-import { UserActions, UserState } from '../stores/userStore';
-import { RecipesActions } from '../stores/recipesStore';
 import { copyOrShareText } from '../utils/share';
 import { alertTypes } from '../stores/alertStore';
-import { TempUserActions, TempUserState } from '../stores/tempUserStore';
 import { TempUser } from '../types/tempUser';
 import IpAddressService from './ipAddress.service';
 
@@ -18,10 +15,16 @@ let retrievingRecipe = false;
 const createRecipe = async (
   text: string,
   firestore: Firestore,
-  userStore?: UserState | UserActions,
-  tempUserStore?: TempUserState | TempUserActions,
+  user: User | null,
+  setUser: React.Dispatch<React.SetStateAction<User | null>>,
+  tempUser: TempUser | null,
+  setTempUser: React.Dispatch<React.SetStateAction<TempUser | null>>,
 ) => {
-  const response = await api.post<ApiResponse<Recipe>>('recipe', { text });
+  const response = await api.post<ApiResponse<Recipe>>('recipe', {
+    text,
+    userId: user?.id,
+    tempUserId: tempUser?.userIpAddress,
+  });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recipe: any = response.data;
   const recipeId = uuidv4();
@@ -29,19 +32,15 @@ const createRecipe = async (
 
   await setDoc(doc(firestore, collectionRef, recipeId), recipe);
 
-  if (userStore && (userStore as UserState).user) {
-    const userCopy = structuredClone((userStore as UserState).user) as User;
-    await UserService.updateUser(
-      firestore,
-      { ...userCopy, recipesGenerated: userCopy.recipesGenerated + 1 },
-      userStore as UserActions,
-    );
-  } else if (tempUserStore && (tempUserStore as TempUserState).tempUser) {
-    const tempUserCopy = structuredClone((tempUserStore as TempUserState).tempUser) as TempUser;
+  if (user) {
+    const userCopy = structuredClone(user) as User;
+    await UserService.updateUser(firestore, { ...userCopy, recipesGenerated: userCopy.recipesGenerated + 1 }, setUser);
+  } else if (tempUser) {
+    const tempUserCopy = structuredClone(tempUser) as TempUser;
     await IpAddressService.updateTempUser(
       firestore,
       { ...tempUserCopy, recipesGenerated: tempUserCopy.recipesGenerated + 1 },
-      tempUserStore as TempUserActions,
+      setTempUser,
     );
   }
 
@@ -87,30 +86,34 @@ const getRecipes = async (firestore: Firestore, user: User): Promise<Recipe[]> =
 
 const bookmarkRecipe = async (
   firestore: Firestore,
-  userStore: UserState | UserActions,
-  recipesStore: RecipesActions,
+  user: User | null,
+  setUser: React.Dispatch<React.SetStateAction<User | null>>,
+  recipes: Recipe[],
+  setRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
   newRecipe?: Recipe,
   recipe?: Recipe,
 ) => {
-  const currentUser = structuredClone((userStore as UserState).user);
+  const currentUser = structuredClone(user);
   if (currentUser) {
     currentUser.recipes.push(newRecipe ? newRecipe.id : recipe!.id);
-    UserService.updateUser(firestore, currentUser, userStore as UserActions);
-    recipesStore.addRecipe(newRecipe ? newRecipe : (recipe as Recipe));
+    UserService.updateUser(firestore, currentUser, setUser);
+    setRecipes([...recipes, newRecipe ? newRecipe : (recipe as Recipe)]);
   }
 };
 
 const unBookmarkRecipe = async (
   firestore: Firestore,
-  userStore: UserState | UserActions,
-  recipesStore: RecipesActions,
+  user: User | null,
+  setUser: React.Dispatch<React.SetStateAction<User | null>>,
+  recipes: Recipe[],
+  setRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
   recipe?: Recipe,
 ) => {
-  const currentUser = structuredClone((userStore as UserState).user);
+  const currentUser = structuredClone(user);
   if (currentUser) {
     currentUser.recipes = currentUser.recipes.filter((recipeId) => recipeId !== recipe!.id);
-    UserService.updateUser(firestore, currentUser, userStore as UserActions);
-    recipesStore.removeRecipe(recipe!.id);
+    UserService.updateUser(firestore, currentUser, setUser);
+    setRecipes(recipes.filter((currentRecipe) => currentRecipe.id !== recipe?.id));
   }
 };
 

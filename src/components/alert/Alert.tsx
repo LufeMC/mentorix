@@ -1,25 +1,30 @@
-import useAlertStore from '../../stores/alertStore';
+import { useAtomValue } from 'jotai';
 import styles from './Alert.module.scss';
 import { AiOutlineClose } from 'react-icons/ai';
+import { AlertAtom, AlertStartedAtom } from '../../stores/alertStore';
+import { useContext } from 'react';
+import { AlertContext } from '../../contexts/alert-context';
 
 export default function Alert() {
-  const alertStore = useAlertStore();
+  const alertContext = useContext(AlertContext);
+  const alert = useAtomValue(AlertAtom);
+  const alertStarted = useAtomValue(AlertStartedAtom);
 
   const closeAlert = () => {
-    alertStore.resetAlert();
+    alertContext.resetAlert();
   };
 
   return (
-    alertStore.alert &&
-    alertStore.started && (
+    alert &&
+    alertStarted && (
       <div className={styles.alertContainer}>
         <div
-          className={`${styles.alert} ${alertStore.alert.type === 'success' ? styles.success : ''} ${
-            alertStore.alert.type === 'error' ? styles.error : ''
-          } ${alertStore.alert.type === 'warning' ? styles.warning : ''}`}
+          className={`${styles.alert} ${alert.type === 'success' ? styles.success : ''} ${
+            alert.type === 'error' ? styles.error : ''
+          } ${alert.type === 'warning' ? styles.warning : ''}`}
         >
           <AiOutlineClose onClick={closeAlert} />
-          <span>{alertStore.alert.message}</span>
+          <span>{alert.message}</span>
           <div className={styles.timer} />
         </div>
       </div>

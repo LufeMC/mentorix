@@ -10,13 +10,14 @@ import Button from '../../components/button/Button';
 import TextButton from '../../components/button/textButton/TextButton';
 import GoogleButton from '../../components/whiteButton/googleButton/GoogleButton';
 import { FirebaseContext } from '../../contexts/firebase-context';
-import useUserStore from '../../stores/userStore';
 import UserService from '../../services/user.service';
 import { useNavigate } from 'react-router-dom';
 import Checkbox from '../../components/checkbox/Checkbox';
 import { AlertContext } from '../../contexts/alert-context';
-import useAlertStore, { Alert } from '../../stores/alertStore';
-import useTempUserStore from '../../stores/tempUserStore';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { UserAtom } from '../../stores/userStore';
+import { Alert, AlertAtom } from '../../stores/alertStore';
+import { LoadingAtom } from '../../stores/loadingStore';
 
 const modes = {
   login: 'login',
@@ -34,13 +35,15 @@ export default function AuthPage() {
 
   const firebaseContext = useContext(FirebaseContext);
   const alertContext = useContext(AlertContext);
-  const userStore = useUserStore();
-  const tempStore = useTempUserStore();
-  const alertStore = useAlertStore();
+  const [user, setUser] = useAtom(UserAtom);
+  const setTempUser = useSetAtom(AlertAtom);
+  const alert = useAtomValue(AlertAtom);
+  const setLoadingLog = useSetAtom(LoadingAtom);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (userStore.user && !alertStore.alert) {
+    if (user && !alert) {
       navigate('/');
     } else {
       setInitiated(true);
@@ -73,7 +76,8 @@ export default function AuthPage() {
             firebaseContext.auth,
             firebaseContext.firestore,
             values,
-            userStore,
+            setUser,
+            setLoadingLog,
             setError,
             setSuccess,
             redirectDestiny,
@@ -124,7 +128,7 @@ export default function AuthPage() {
       return false;
     }
 
-    alertStore.resetAlert();
+    alertContext.resetAlert();
     setValidationErrors([]);
     return true;
   };
@@ -146,7 +150,7 @@ export default function AuthPage() {
   };
 
   const changeMode = (newMode = '') => {
-    alertStore.resetAlert();
+    alertContext.resetAlert();
     setValidationErrors([]);
     setIsPasswordShown(false);
     setAcceptedTerms(false);
@@ -166,7 +170,7 @@ export default function AuthPage() {
       message: error,
       type: 'error',
     };
-    alertContext.setAlert(newAlert);
+    alertContext.startAlert(newAlert);
     setEmailLoading(false);
     setGoogleLoading(false);
     setAcceptedTerms(false);
@@ -177,7 +181,7 @@ export default function AuthPage() {
       message: success,
       type: 'success',
     };
-    alertContext.setAlert(newAlert);
+    alertContext.startAlert(newAlert);
 
     setEmailLoading(false);
     setGoogleLoading(false);
@@ -186,8 +190,7 @@ export default function AuthPage() {
     changeMode('login');
 
     if (redirect && redirectDestiny) {
-      tempStore.tempLogout();
-      tempStore.tempDoneLoggingIn();
+      setTempUser(null);
       navigate(redirectDestiny);
     }
   };
@@ -206,7 +209,8 @@ export default function AuthPage() {
     await UserService.googleLogin(
       firebaseContext.auth,
       firebaseContext.firestore,
-      userStore,
+      setUser,
+      setLoadingLog,
       setError,
       setSuccess,
       redirectDestiny,

@@ -7,9 +7,10 @@ import RecipeService from '../../../../../services/recipe.service';
 import { AlertContext } from '../../../../../contexts/alert-context';
 import { Alert, alertTypes } from '../../../../../stores/alertStore';
 import { FirebaseContext } from '../../../../../contexts/firebase-context';
-import useUserStore from '../../../../../stores/userStore';
-import useRecipesStore from '../../../../../stores/recipesStore';
 import { Link } from 'react-router-dom';
+import { RecipesAtom } from '../../../../../stores/recipesStore';
+import { UserAtom } from '../../../../../stores/userStore';
+import { useAtom } from 'jotai';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -19,8 +20,8 @@ export default function RecipeCard(props: RecipeCardProps) {
   const alertContext = useContext(AlertContext);
   const firebaseContext = useContext(FirebaseContext);
 
-  const userStore = useUserStore();
-  const recipesStores = useRecipesStore();
+  const [user, setUser] = useAtom(UserAtom);
+  const [recipes, setRecipes] = useAtom(RecipesAtom);
 
   const [style, setStyle] = useState<string>();
 
@@ -43,7 +44,7 @@ export default function RecipeCard(props: RecipeCardProps) {
       message: text,
       type,
     };
-    alertContext.setAlert(newAlert);
+    alertContext.startAlert(newAlert);
   };
 
   const shareRecipe = () => {
@@ -51,7 +52,7 @@ export default function RecipeCard(props: RecipeCardProps) {
   };
 
   const unbookmarkRecipe = async () => {
-    RecipeService.unBookmarkRecipe(firebaseContext.firestore, userStore, recipesStores, props.recipe);
+    RecipeService.unBookmarkRecipe(firebaseContext.firestore, user, setUser, recipes, setRecipes, props.recipe);
   };
 
   return (

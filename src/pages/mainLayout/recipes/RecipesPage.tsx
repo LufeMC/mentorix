@@ -1,28 +1,29 @@
 import { Link, useNavigate } from 'react-router-dom';
-import useRecipesStore from '../../../stores/recipesStore';
-import useUserStore from '../../../stores/userStore';
+import { RecipesAtom } from '../../../stores/recipesStore';
+import { UserAtom } from '../../../stores/userStore';
 import styles from './RecipesPage.module.scss';
 import RecipeCard from './components/recipeCard/RecipeCard';
 import { useEffect } from 'react';
+import { useAtomValue } from 'jotai';
 
 export default function RecipesPage() {
-  const recipesStore = useRecipesStore();
-  const userStore = useUserStore();
+  const user = useAtomValue(UserAtom);
+  const recipes = useAtomValue(RecipesAtom);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!userStore.user) {
+    if (!user) {
       navigate('/');
     }
   });
 
   return (
     <div className={styles.recipesContainer}>
-      {!userStore.user?.premium ? (
-        recipesStore.recipes.length ? (
+      {user?.premium ? (
+        recipes.length ? (
           <div className={styles.recipes}>
-            {recipesStore.recipes.map((recipe) => (
+            {recipes.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} />
             ))}
           </div>

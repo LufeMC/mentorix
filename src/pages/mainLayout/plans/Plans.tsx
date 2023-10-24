@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import StripeService from '../../../services/stripe.service';
 import { Alert, alertTypes } from '../../../stores/alertStore';
 import { AlertContext } from '../../../contexts/alert-context';
-import useUserStore from '../../../stores/userStore';
 import { getCurrentDate } from '../../../utils/date';
 import UserService from '../../../services/user.service';
 import { FirebaseContext } from '../../../contexts/firebase-context';
@@ -11,6 +10,9 @@ import { User } from '../../../types/user';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import styles from './Plans.module.scss';
 import WhiteButton from '../../../components/whiteButton/WhiteButton';
+import { UserAtom } from '../../../stores/userStore';
+import { useAtom, useAtomValue } from 'jotai';
+import { LoadingAtom } from '../../../stores/loadingStore';
 
 export default function Plans() {
   const { checkoutSessionId } = useParams();
@@ -19,12 +21,13 @@ export default function Plans() {
   const firebaseContext = useContext(FirebaseContext);
   const [user, loading] = useAuthState(firebaseContext.auth);
 
-  const userStore = useUserStore();
+  const [userAtom, setUserAtom] = useAtom(UserAtom);
+  const loadingLog = useAtomValue(LoadingAtom);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && user && !userStore.loggingIn) {
-      if (!userStore.user) {
+    if (!loading && user && !loadingLog) {
+      if (!userAtom) {
         navigate('/');
       } else {
         if (!retrievingCheckout.current && checkoutSessionId) {
@@ -35,7 +38,7 @@ export default function Plans() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userStore.loggingIn]);
+  }, [loadingLog]);
 
   const handleAlert = (text: string, type: keyof typeof alertTypes) => {
     const newAlert: Alert = {
@@ -43,7 +46,7 @@ export default function Plans() {
       type,
     };
 
-    alertContext.setAlert(newAlert);
+    alertContext.startAlert(newAlert);
   };
 
   const retrieveCheckoutSession = async (checkoutSessionId: string) => {
@@ -52,12 +55,12 @@ export default function Plans() {
 
       if (checkoutSession.payment_status === 'paid') {
         handleAlert('Your payment has been completed. Congratulations!', 'success');
-        const userCopy = structuredClone(userStore.user);
+        const userCopy = structuredClone(userAtom);
         userCopy!.premium = true;
         userCopy!.planRenewalDate = getCurrentDate();
         userCopy!.customerId = checkoutSession.customer;
 
-        UserService.updateUser(firebaseContext.firestore, userCopy as User, userStore);
+        UserService.updateUser(firebaseContext.firestore, userCopy as User, setUserAtom);
         navigate('/plans');
       } else {
         handleAlert('There was a problem with your payment. Please, check your card details and try again', 'error');
@@ -75,7 +78,7 @@ export default function Plans() {
       <div className={styles.plans}>
         <div className={styles.plan}>
           <div className={styles.content}>
-            <h2>Free plan{!userStore.user?.premium ? ' (Your plan)' : ''}</h2>
+            <h2>Free plan{!userAtom?.premium ? ' (Your plan)' : ''}</h2>
             <h2>$0/month</h2>
             <ul>
               <li>20 recipes per month</li>
@@ -86,7 +89,7 @@ export default function Plans() {
         </div>
         <div className={styles.plan}>
           <div className={styles.content}>
-            <h2>Premium plan{userStore.user?.premium ? ' (Your plan)' : ''}</h2>
+            <h2>Premium plan{userAtom?.premium ? ' (Your plan)' : ''}</h2>
             <h2>$5/month</h2>
             <ul>
               <li>Unlimited recipes per month</li>
@@ -95,11 +98,11 @@ export default function Plans() {
           </div>
           <div className={styles.actions}>
             <WhiteButton
-              text={userStore.user?.premium ? 'Manage your plan' : 'Select this plan'}
+              text={userAtom?.premium ? 'Manage your plan' : 'Select this plan'}
               loading={false}
               onClick={() =>
                 window.open(
-                  userStore.user?.premium
+                  userAtom?.premium
                     ? 'https://billing.stripe.com/p/login/test_14keYK52Y8Td6yI8ww'
                     : 'https://buy.stripe.com/test_fZeg0qajF0S079S3cc',
                   '_blank',

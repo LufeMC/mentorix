@@ -27,9 +27,19 @@ router.get('/:sessionId', async (req, res) => {
   }
 });
 
-router.post('/webhook', async (req, res) => {
+router.post('/subscription', async (req, res) => {
   const event: Event = req.body;
-  await StripeController.cancelPackage(event.data.object.customer);
+  if (
+    event.type === 'customer.subscription.updated' &&
+    !event.data.object.cancellation_details.reason
+  ) {
+    await StripeController.renewPackage(event.data.object.customer);
+  } else if (
+    event.type === 'customer.subscription.updated' &&
+    event.data.object.cancellation_details.reason
+  ) {
+    await StripeController.cancelPackage(event.data.object.customer);
+  }
 
   res.send(true);
 });

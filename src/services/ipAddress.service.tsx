@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { Firestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { TempUser } from '../types/tempUser';
-import { TempUserActions } from '../stores/tempUserStore';
 
 const collectionRef = 'tempUsers';
 
@@ -28,7 +27,7 @@ const getTempUser = async (firestore: Firestore): Promise<TempUser> => {
 const updateTempUser = async (
   firestore: Firestore,
   updatedUser: TempUser,
-  tempUserStore: TempUserActions,
+  setTempUser: React.Dispatch<React.SetStateAction<TempUser | null>>,
 ): Promise<TempUser | string> => {
   if (updatedUser.userIpAddress) {
     const tempUsersRef = doc(firestore, collectionRef, updatedUser.userIpAddress);
@@ -37,17 +36,18 @@ const updateTempUser = async (
     const tempUserCopy: any = structuredClone(updatedUser);
     delete tempUserCopy.userIpAddress;
     await updateDoc(tempUsersRef, tempUserCopy);
-    tempUserStore.tempUpdate(updatedUser);
+    setTempUser(updatedUser);
   }
 
   return 'No user provided';
 };
 
-const retrieveTempUser = async (firestore: Firestore, tempStore: TempUserActions) => {
-  tempStore.tempStartLoggingIn();
+const retrieveTempUser = async (
+  firestore: Firestore,
+  setTempUser: React.Dispatch<React.SetStateAction<TempUser | null>>,
+) => {
   const tempUser = await getTempUser(firestore);
-  tempStore.tempUpdate(tempUser);
-  tempStore.tempDoneLoggingIn();
+  setTempUser(tempUser);
 };
 
 const IpAddressService = {

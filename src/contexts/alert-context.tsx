@@ -1,40 +1,65 @@
 import { createContext, ReactNode, useEffect } from 'react';
-import useAlertStore, { Alert } from '../stores/alertStore';
+import { Alert, AlertAtom, AlertStartedAtom, AlertTimeoutAtom } from '../stores/alertStore';
+import { useAtom, useSetAtom } from 'jotai';
 
 interface AlertContextProps {
   children?: ReactNode;
 }
 
 interface AlertContextValue {
-  setAlert: (_newAlert: Alert) => void;
+  startAlert: (_newAlert: Alert) => void;
+  resetAlert: () => void;
 }
 
 export const AlertContext = createContext<AlertContextValue>({} as AlertContextValue);
 
 export default function AlertProvider({ children }: AlertContextProps) {
-  const alertStore = useAlertStore();
+  const setAlert = useSetAtom(AlertAtom);
+  const [alertTimeout, setAlertTimeout] = useAtom(AlertTimeoutAtom);
+  const setAlertStarted = useSetAtom(AlertStartedAtom);
 
   useEffect(() => {
-    alertStore.resetAlert();
+    resetAlert();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setAlert = (newAlert: Alert) => {
-    alertStore.resetAlert();
+  const clearAlertTimeout = () => {
+    if (alertTimeout !== null) {
+      clearTimeout(alertTimeout);
+    }
+  };
+
+  const resetAlert = () => {
+    clearAlertTimeout();
+    setAlertTimeout(null);
+    setAlert(null);
+    setAlertStarted(false);
+  };
+
+  const changeAlert = (newAlert: Alert, newAlertTimeout: NodeJS.Timeout) => {
+    clearAlertTimeout();
+    setAlertTimeout(newAlertTimeout);
+    setAlert(newAlert);
+    setAlertStarted(true);
+  };
+
+  const startAlert = (newAlert: Alert) => {
+    resetAlert();
 
     setTimeout(() => {
-      alertStore.resetAlert();
+      resetAlert();
 
       const newTimeout = setTimeout(() => {
-        alertStore.resetAlert();
+        resetAlert();
       }, 5000);
 
-      alertStore.changeAlert(newAlert, newTimeout);
+      changeAlert(newAlert, newTimeout);
     }, 100);
   };
 
   const value: AlertContextValue = {
-    setAlert,
+    startAlert,
+    resetAlert,
   };
 
   return <AlertContext.Provider value={value}>{children}</AlertContext.Provider>;

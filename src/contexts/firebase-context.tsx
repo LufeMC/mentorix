@@ -2,13 +2,15 @@ import { auth, analytics, firestore } from '../services/firebase';
 import { createContext, ReactNode, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import UserService from '../services/user.service';
-import useUserStore from '../stores/userStore';
-import useRecipesStore from '../stores/recipesStore';
 import RecipeService from '../services/recipe.service';
 import { User } from '../types/user';
 import IpAddressService from '../services/ipAddress.service';
-import useTempUserStore from '../stores/tempUserStore';
 import { getCurrentDate, isOneMonthAfter } from '../utils/date';
+import { UserAtom } from '../stores/userStore';
+import { RecipesAtom } from '../stores/recipesStore';
+import { useSetAtom } from 'jotai';
+import { TempUserAtom } from '../stores/tempUserStore';
+import { LoadingAtom } from '../stores/loadingStore';
 
 interface FirebaseContextProps {
   children?: ReactNode;
@@ -24,23 +26,22 @@ export const FirebaseContext = createContext<FirebaseContextValue>({} as Firebas
 
 export default function FirebaseProvider({ children }: FirebaseContextProps) {
   const [user, loading] = useAuthState(auth);
-  const userStore = useUserStore();
-  const tempStore = useTempUserStore();
-  const recipeStore = useRecipesStore();
+  const setUserAtom = useSetAtom(UserAtom);
+  const setRecipes = useSetAtom(RecipesAtom);
+  const setTempUser = useSetAtom(TempUserAtom);
+  const setLoadingLog = useSetAtom(LoadingAtom);
 
   useEffect(() => {
-    userStore.startLoggingIn();
-    tempStore.tempStartLoggingIn();
+    setLoadingLog(true);
+
     if (!loading) {
-      recipeStore.recipes = [];
-      userStore.user = null;
+      setRecipes([]);
+      setUserAtom(null);
+      setTempUser(null);
 
       if (user) {
-        tempStore.tempUser = null;
-        tempStore.tempDoneLoggingIn();
         retrieveUser(user);
       } else {
-        userStore.stopLoggingIn();
         retrieveTempUser();
       }
     }
@@ -48,40 +49,41 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
   }, [loading]);
 
   const retrieveTempUser = async () => {
-    await IpAddressService.retrieveTempUser(firestore, tempStore);
+    await IpAddressService.retrieveTempUser(firestore, setTempUser);
+    setLoadingLog(false);
   };
 
   const retrieveRecipes = async (user: User) => {
     const recipes = await RecipeService.getRecipes(firestore, user);
-    recipeStore.changeRecipes(recipes);
+    setRecipes(recipes);
   };
 
-  const checkIf1MonthLater = async (user: User) => {
+  const checkIf1MonthLaterAndRenew = async (user: User) => {
     if (user) {
       const shouldRenewThePlan = isOneMonthAfter(getCurrentDate(), user!.planRenewalDate);
       if (shouldRenewThePlan) {
         const userCopy = structuredClone(user);
         userCopy!.planRenewalDate = getCurrentDate();
+        userCopy.recipesGenerated - 0;
 
-        if (!userCopy!.customerId) {
+        if (!userCopy!.renewed) {
           userCopy.premium = false;
         }
 
-        UserService.updateUser(firestore, userCopy as User, userStore);
+        UserService.updateUser(firestore, userCopy as User, setUserAtom);
       }
     }
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const retrieveUser = async (user: any) => {
-    userStore.startLoggingIn();
     const newUser = await UserService.getUser(firestore, user.uid);
 
     if (typeof newUser !== 'string' && user.emailVerified) {
-      userStore.update(newUser);
-      userStore.stopLoggingIn();
+      setUserAtom(newUser);
+      setLoadingLog(false);
       retrieveRecipes(newUser);
-      await checkIf1MonthLater(newUser);
+      await checkIf1MonthLaterAndRenew(newUser);
     }
   };
 

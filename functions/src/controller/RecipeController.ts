@@ -1,6 +1,9 @@
 /* eslint-disable no-useless-catch */
 import functions = require('firebase-functions');
 import OpenAI from 'openai';
+import db from '..';
+import { TempUser } from '../types/tempUser';
+import { User } from '../types/user';
 
 const GPT_KEY = functions.config().gpt.api_key;
 
@@ -80,9 +83,41 @@ const response = async (text: string) => {
   }
 };
 
+const validateUser = async (userId: string, tempUserId: string) => {
+  const currentUserId = userId ?? tempUserId;
+  const collectionId = userId ? 'users' : 'tempUsers';
+  const maxRecipes = userId ? 20 : 5;
+
+  const userQuery = await db.collection(collectionId).doc(currentUserId).get();
+
+  if (userQuery.exists) {
+    const user: User | TempUser = userQuery.data();
+    if (
+      user.recipesGenerated < maxRecipes ||
+      (userId && (user as User).premium)
+    ) {
+      return {
+        success: true,
+        message: '',
+      };
+    }
+
+    return {
+      success: false,
+      message: "You don't have more recipes this month",
+    };
+  }
+
+  return {
+    success: false,
+    message: "This user doesn't exist",
+  };
+};
+
 /*
 Export
 */
 export const RecipeController = {
   response,
+  validateUser,
 };

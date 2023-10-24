@@ -9,7 +9,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth';
-import { UserActions } from '../stores/userStore';
 import { getCurrentDate } from '../utils/date';
 
 const authType = getAuth();
@@ -43,7 +42,11 @@ const getUserByEmail = async (firestore: Firestore, userEmail: string): Promise<
   }
 };
 
-const updateUser = async (firestore: Firestore, updatedUser: User, userStore: UserActions): Promise<User | string> => {
+const updateUser = async (
+  firestore: Firestore,
+  updatedUser: User,
+  setUser: React.Dispatch<React.SetStateAction<User | null>>,
+): Promise<User | string> => {
   if (updatedUser.id) {
     const usersRef = doc(firestore, collectionRef, updatedUser.id);
 
@@ -51,7 +54,7 @@ const updateUser = async (firestore: Firestore, updatedUser: User, userStore: Us
     delete userCopy.id;
     await updateDoc(usersRef, userCopy);
     delete userCopy.customerId;
-    userStore.update(updatedUser);
+    setUser(updatedUser);
   }
 
   return 'No user provided';
@@ -88,7 +91,8 @@ const login = async (
   auth: typeof authType,
   firestore: Firestore,
   attemptedUser: UserLogin,
-  userStore: UserActions,
+  setUser: React.Dispatch<React.SetStateAction<User | null>>,
+  setLoadingLog: React.Dispatch<React.SetStateAction<boolean>>,
   errorHandling: (_error: string) => void,
   successHandling: (_success: string, _redirect: boolean, _redirectDestiny?: string) => void,
   redirectDestiny: string,
@@ -96,13 +100,13 @@ const login = async (
   signInWithEmailAndPassword(auth, attemptedUser.email, attemptedUser.password)
     .then(async (userCredentials) => {
       if (userCredentials.user.emailVerified) {
-        userStore.startLoggingIn();
+        setLoadingLog(true);
         const user = await UserService.getUser(firestore, userCredentials.user.uid);
 
         if (typeof user !== 'string') {
           user.id = userCredentials.user.uid;
-          userStore.update(user);
-          userStore.stopLoggingIn();
+          setUser(user);
+          setLoadingLog(false);
 
           successHandling('Login successfull!', true, redirectDestiny);
         }
@@ -118,7 +122,8 @@ const login = async (
 const googleLogin = (
   auth: typeof authType,
   firestore: Firestore,
-  userStore: UserActions,
+  setUser: React.Dispatch<React.SetStateAction<User | null>>,
+  setLoadingLog: React.Dispatch<React.SetStateAction<boolean>>,
   errorHandling: (_error: string) => void,
   successHandling: (_success: string, _redirect: boolean, _redirectDestiny?: string) => void,
   redirectDestiny: string,
@@ -131,7 +136,7 @@ const googleLogin = (
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential) {
         const userCredentials = result.user;
-        userStore.startLoggingIn();
+        setLoadingLog(true);
 
         const existingUser = await getUser(firestore, userCredentials.uid);
         let user = existingUser;
@@ -151,9 +156,8 @@ const googleLogin = (
           user.id = userCredentials.uid;
         }
 
-        userStore.update(user as User);
-        userStore.stopLoggingIn();
-        userStore.stopLoggingIn();
+        setUser(user as User);
+        setLoadingLog(false);
 
         successHandling('Login successfull!', true, redirectDestiny);
       }

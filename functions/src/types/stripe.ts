@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 interface AutomaticTax {
   enabled: boolean;
   status: null | string;
@@ -96,106 +97,174 @@ export type CheckoutSession = {
   url: null | string;
 };
 
-interface EventDataObject {
-  id: string;
-  object: string;
-  account_country: string;
-  account_name: string;
-  account_tax_ids: null;
-  amount_due: number;
-  amount_paid: number;
-  amount_remaining: number;
-  amount_shipping: number;
-  application: null;
-  application_fee_amount: null;
-  attempt_count: number;
-  attempted: boolean;
-  auto_advance: boolean;
-  automatic_tax: AutomaticTax;
-  billing_reason: string;
-  charge: null;
-  collection_method: string;
-  created: number;
-  currency: string;
-  custom_fields: null;
-  customer: string;
-  customer_address: null;
-  customer_email: null;
-  customer_name: null;
-  customer_phone: null;
-  customer_shipping: null;
-  customer_tax_exempt: string;
-  customer_tax_ids: string[];
-  default_payment_method: null;
-  default_source: null;
-  default_tax_rates: [];
-  description: null;
-  discount: null;
-  discounts: [];
-  due_date: null;
-  effective_at: null;
-  ending_balance: null;
-  footer: null;
-  from_invoice: null;
-  hosted_invoice_url: null;
-  invoice_pdf: null;
-  last_finalization_error: null;
-  latest_revision: null;
-  lines: Record<string, any>; // You can specify a more specific type if needed
-  livemode: boolean;
-  metadata: Record<string, any>;
-  next_payment_attempt: null;
-  number: null;
-  on_behalf_of: null;
-  paid: boolean;
-  paid_out_of_band: boolean;
-  payment_intent: null;
-  payment_settings: Record<string, any>;
-  period_end: number;
-  period_start: number;
-  post_payment_credit_notes_amount: number;
-  pre_payment_credit_notes_amount: number;
-  quote: null;
-  receipt_number: null;
-  rendering: null;
-  rendering_options: null;
-  shipping_cost: null;
-  shipping_details: null;
-  starting_balance: number;
-  statement_descriptor: null;
-  status: string;
-  status_transitions: Record<string, any>;
-  subscription: string;
-  subscription_details: Record<string, any>;
-  subtotal: number;
-  subtotal_excluding_tax: number;
-  tax: null;
-  test_clock: null;
-  total: number;
-  total_discount_amounts: [];
-  total_excluding_tax: number;
-  total_tax_amounts: [];
-  transfer_data: null;
-  webhooks_delivered_at: number;
-}
-
 export type Event = {
   id: string;
   object: string;
   api_version: string;
   created: number;
-  data: {
-    object: EventDataObject;
-    previous_attributes: {
-      auto_advance: boolean;
-      next_payment_attempt: number;
-    };
-  };
+  data: Data;
   livemode: boolean;
   pending_webhooks: number;
-  request: {
-    id: null;
-    idempotency_key: null;
-  };
+  request: Request;
   type: string;
 };
+
+interface Data {
+  object: Subscription;
+  previous_attributes?: PreviousAttributes;
+}
+
+interface Subscription {
+  id: string;
+  object: string;
+  application: null;
+  application_fee_percent: null;
+  automatic_tax: AutomaticTax;
+  billing_cycle_anchor: number;
+  billing_thresholds: null;
+  cancel_at: number | null;
+  cancel_at_period_end: boolean;
+  canceled_at: number | null;
+  cancellation_details: CancellationDetails;
+  collection_method: string;
+  created: number;
+  currency: string;
+  current_period_end: number;
+  current_period_start: number;
+  customer: string;
+  days_until_due: null;
+  default_payment_method: string;
+  default_source: null;
+  default_tax_rates: any[];
+  description: null;
+  discount: null;
+  ended_at: null;
+  items: Items;
+  latest_invoice: string;
+  livemode: boolean;
+  metadata: any;
+  next_pending_invoice_item_invoice: null;
+  on_behalf_of: null;
+  pause_collection: null;
+  payment_settings: PaymentSettings;
+  pending_invoice_item_interval: null;
+  pending_setup_intent: null;
+  pending_update: null;
+  plan: Plan;
+  quantity: number;
+  schedule: null;
+  start_date: number;
+  status: string;
+  test_clock: null;
+  transfer_data: null;
+  trial_end: null;
+  trial_settings: TrialSettings;
+  trial_start: null;
+}
+
+interface AutomaticTax {
+  enabled: boolean;
+}
+
+interface CancellationDetails {
+  comment: null;
+  feedback: string | null;
+  reason: string | null;
+}
+
+interface Items {
+  object: string;
+  data: SubscriptionItem[];
+  has_more: boolean;
+  total_count: number;
+  url: string;
+}
+
+interface SubscriptionItem {
+  id: string;
+  object: string;
+  billing_thresholds: null;
+  created: number;
+  metadata: any;
+  plan: Plan;
+  price: Price;
+  quantity: number;
+  subscription: string;
+  tax_rates: any[];
+}
+
+interface Plan {
+  id: string;
+  object: string;
+  active: boolean;
+  aggregate_usage: null;
+  amount: number;
+  amount_decimal: string;
+  billing_scheme: string;
+  created: number;
+  currency: string;
+  interval: string;
+  interval_count: number;
+  livemode: boolean;
+  metadata: any;
+  nickname: null;
+  product: string;
+  tiers_mode: null;
+  transform_usage: null;
+  trial_period_days: null;
+  usage_type: string;
+}
+
+interface Price {
+  id: string;
+  object: string;
+  active: boolean;
+  billing_scheme: string;
+  created: number;
+  currency: string;
+  custom_unit_amount: null;
+  livemode: boolean;
+  lookup_key: null;
+  metadata: any;
+  nickname: null;
+  product: string;
+  recurring: Recurring;
+  tax_behavior: string;
+  tiers_mode: null;
+  transform_quantity: null;
+  type: string;
+  unit_amount: number;
+  unit_amount_decimal: string;
+}
+
+interface Recurring {
+  aggregate_usage: null;
+  interval: string;
+  interval_count: number;
+  trial_period_days: null;
+  usage_type: string;
+}
+
+interface PaymentSettings {
+  payment_method_options: null;
+  payment_method_types: null;
+  save_default_payment_method: string;
+}
+
+interface TrialSettings {
+  end_behavior: {
+    missing_payment_method: string;
+  };
+}
+
+interface PreviousAttributes {
+  cancel_at?: number;
+  cancel_at_period_end?: boolean;
+  canceled_at?: number;
+  cancellation_details?: CancellationDetails;
+}
+
+interface Request {
+  id: string | null;
+  idempotency_key: string;
+}

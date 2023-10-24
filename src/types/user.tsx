@@ -8,6 +8,7 @@ export type User = {
   password?: string;
   id?: string;
   customerId?: string;
+  renewed?: boolean;
 };
 
 export type UserLogin = {
