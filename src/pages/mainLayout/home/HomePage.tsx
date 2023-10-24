@@ -15,10 +15,11 @@ import { FirebaseContext } from '../../../contexts/firebase-context';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertContext } from '../../../contexts/alert-context';
 import { Alert } from '../../../stores/alertStore';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { UserAtom } from '../../../stores/userStore';
 import { TempUserAtom } from '../../../stores/tempUserStore';
 import { LoadingRecipeAtom } from '../../../stores/recipesStore';
+import { LoadingAtom } from '../../../stores/loadingStore';
 
 // Define the initial options
 const initialOptions: RecipeOptions = {
@@ -49,6 +50,7 @@ export default function HomePage() {
   const [user, setUser] = useAtom(UserAtom);
   const [tempUser, setTempUser] = useAtom(TempUserAtom);
   const [loadingRecipe, setLoadingRecipe] = useAtom(LoadingRecipeAtom);
+  const loading = useAtomValue(LoadingAtom);
   const firebaseContext = useContext(FirebaseContext);
   const alertContext = useContext(AlertContext);
   const navigate = useNavigate();
@@ -226,7 +228,7 @@ export default function HomePage() {
         </div>
         <div className={styles.summary}>
           <Summary text={text} setText={setText} selectedItems={selectedItems} />
-          {!tempUser || (tempUser && tempUser.recipesGenerated < 5) ? (
+          {loading ? null : !tempUser || (tempUser && tempUser.recipesGenerated < 5) ? (
             (user && !user?.premium && user!.recipesGenerated < 20) ||
             (tempUser && tempUser.recipesGenerated < 5) ||
             user?.premium ? (
