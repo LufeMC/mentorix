@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import * as functions from 'firebase-functions';
 const { initializeApp } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
 import * as express from 'express';
 import * as cors from 'cors';
 
 // initialize firebase inorder to access its services
 initializeApp();
+const db = getFirestore();
 
 // initialize express server
 const main = express();
@@ -22,3 +24,4 @@ main.use('/v1', require('./routes/index'));
 
 // define google cloud function name
 export const cookiiAPI = functions.https.onRequest(main);
+export default db;
