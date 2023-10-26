@@ -20,6 +20,7 @@ import { UserAtom } from '../../../stores/userStore';
 import { TempUserAtom } from '../../../stores/tempUserStore';
 import { LoadingRecipeAtom } from '../../../stores/recipesStore';
 import { LoadingAtom } from '../../../stores/loadingStore';
+import { logEvent } from 'firebase/analytics';
 
 // Define the initial options
 const initialOptions: RecipeOptions = {
@@ -130,6 +131,7 @@ export default function HomePage() {
   };
 
   const createRecipe = async () => {
+    logEvent(firebaseContext.analytics, 'create_recipe_clicked');
     if (!loadingRecipe) {
       alertContext.resetAlert();
       setLoadingRecipe(true);
@@ -145,12 +147,14 @@ export default function HomePage() {
         );
         window.sessionStorage.setItem('recipeGenerated', recipe.id);
         navigate(`/recipes/${recipe.id}`);
+        logEvent(firebaseContext.analytics, 'recipe_created');
       } catch (err) {
         const newAlert: Alert = {
           message: 'An error occured. Try again later',
           type: 'error',
         };
         alertContext.startAlert(newAlert);
+        logEvent(firebaseContext.analytics, 'error_on_creating_recipe');
       } finally {
         setLoadingRecipe(false);
       }

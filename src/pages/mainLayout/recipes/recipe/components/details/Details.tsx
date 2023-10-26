@@ -12,25 +12,31 @@ export default function RecipeDetails(props: RecipeDetailsProps) {
   return (
     <div className={styles.details}>
       <div className={styles.basicDetails}>
-        <div className={styles.property}>
-          <PiKnife />
-          <span>Preparation: {props.recipe.preparationTime}</span>
-        </div>
-        <div className={styles.property}>
-          <PiCookingPot />
-          <span>Cooking: {props.recipe.cookingTime}</span>
-        </div>
+        {props.recipe.preparationTime && (
+          <div className={styles.property}>
+            <PiKnife />
+            <span>Preparation: {props.recipe.preparationTime}</span>
+          </div>
+        )}
+        {props.recipe.cookingTime && (
+          <div className={styles.property}>
+            <PiCookingPot />
+            <span>Cooking: {props.recipe.cookingTime}</span>
+          </div>
+        )}
       </div>
       <div className={styles.ingredientContainer}>
         <h2>Ingredients</h2>
         <div className={styles.ingredientList}>
-          {props.recipe.ingredients.map((ingredient) => (
-            <div className={styles.ingredient} key={ingredient.ingredient}>
-              <Checkbox text="" onChange={() => {}} />
-              <span className={styles.quantity}>{capitalizeWord(ingredient.quantity)}</span>
-              <span className={styles.ingredientName}>{capitalizeWord(ingredient.ingredient)}</span>
-            </div>
-          ))}
+          {props.recipe.ingredients.map((ingredient) =>
+            ingredient.ingredient ? (
+              <div className={styles.ingredient} key={ingredient.ingredient}>
+                <Checkbox text="" onChange={() => {}} />
+                <span className={styles.quantity}>{capitalizeWord(ingredient.quantity)}</span>
+                <span className={styles.ingredientName}>{capitalizeWord(ingredient.ingredient)}</span>
+              </div>
+            ) : null,
+          )}
         </div>
       </div>
     </div>

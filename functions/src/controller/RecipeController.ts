@@ -19,7 +19,9 @@ const response = async (text: string) => {
     professional chef and write specifics about each instruction.
     Also, make sure each ingredient have the quantity and name as specified
     in the schema. Finally, make sure the recipe has every field specified.
-    DO NOT LET anything out!`;
+    However, do not add ingredients that the user didn't specify in the prompt.
+    These are all ingredients they have at home. All you may add is vegetable oil,
+    salt and pepper!`;
     //Define the JSON Schema by creating a schema object
     const schema = {
       type: 'object',

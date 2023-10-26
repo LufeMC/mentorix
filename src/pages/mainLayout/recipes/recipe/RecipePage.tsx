@@ -14,6 +14,7 @@ import { Alert, alertTypes } from '../../../../stores/alertStore';
 import { RecipesAtom } from '../../../../stores/recipesStore';
 import { useAtom } from 'jotai';
 import { UserAtom } from '../../../../stores/userStore';
+import { logEvent } from 'firebase/analytics';
 
 export default function RecipePage() {
   const firebaseContext = useContext(FirebaseContext);
@@ -26,10 +27,17 @@ export default function RecipePage() {
   const [recipe, setRecipe] = useState<Recipe>();
 
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const logging = useRef<boolean>(false);
 
   useEffect(() => {
     if (recipeId) {
       getRecipe(recipeId);
+    }
+
+    if (!logging.current) {
+      logging.current = true;
+      logEvent(firebaseContext.analytics, 'recipe_open');
+      logging.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipeId]);

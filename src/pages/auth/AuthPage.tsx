@@ -5,7 +5,7 @@ import TextInput from '../../components/input/textInput/TextInput';
 import Background from '../../assets/img/background.png';
 import Logo from '../../assets/img/logo.svg';
 import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff, HiOutlineUserCircle } from 'react-icons/hi';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import Button from '../../components/button/Button';
 import TextButton from '../../components/button/textButton/TextButton';
 import GoogleButton from '../../components/whiteButton/googleButton/GoogleButton';
@@ -18,6 +18,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { UserAtom } from '../../stores/userStore';
 import { Alert, AlertAtom } from '../../stores/alertStore';
 import { LoadingAtom } from '../../stores/loadingStore';
+import { logEvent } from 'firebase/analytics';
 
 const modes = {
   login: 'login',
@@ -42,11 +43,23 @@ export default function AuthPage() {
 
   const navigate = useNavigate();
 
+  const logging = useRef<boolean>(false);
+
   useEffect(() => {
     if (user && !alert) {
       navigate('/');
     } else {
       setInitiated(true);
+    }
+
+    if (!logging.current) {
+      logging.current = true;
+      logEvent(firebaseContext.analytics, 'auth_page_open', {
+        content_type: 'image',
+        content_id: 'P12453',
+        items: [{ name: 'Kittens' }],
+      });
+      logging.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
