@@ -60,7 +60,7 @@ export default function Navbar(props: NavbarProps) {
             <div>
               <Link to={loadingRecipe ? '#' : '/'}>Home</Link>
               <Link to={loadingRecipe ? '#' : '/recipes'}>My Recipes</Link>
-              <Link to={loadingRecipe ? '#' : '/plans'}>My Plan</Link>
+              {/* <Link to={loadingRecipe ? '#' : '/plans'}>My Plan</Link> */}
             </div>
           ) : (
             <div>

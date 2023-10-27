@@ -1,5 +1,6 @@
 import db from '..';
 import { ApiResponse, stripeApi } from '../integrations/stripe';
+import { mailchimp_handler } from '../mailchimp_add_user';
 import { CheckoutSession } from '../types/stripe';
 import { User } from '../types/user';
 
@@ -23,6 +24,7 @@ const cancelPackage = async (customerId: string) => {
     if (userQuery.docs?.length) {
       const user: User = userQuery.docs[0].data();
       user.renewed = false;
+      await mailchimp_handler({ user });
 
       await db.collection('users').doc(userQuery.docs[0].id).update(user);
     }
@@ -42,6 +44,7 @@ const renewPackage = async (customerId: string) => {
     if (userQuery.docs?.length) {
       const user: User = userQuery.docs[0].data();
       user.renewed = true;
+      await mailchimp_handler({ user, plan_renewed: true });
 
       await db.collection('users').doc(userQuery.docs[0].id).update(user);
     }

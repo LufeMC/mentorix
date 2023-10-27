@@ -4,6 +4,7 @@ const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 import * as express from 'express';
 import * as cors from 'cors';
+import { mailchimp_handler } from './mailchimp_add_user';
 
 // initialize firebase inorder to access its services
 initializeApp();
@@ -25,3 +26,6 @@ main.use('/v1', require('./routes/index'));
 // define google cloud function name
 export const cookiiAPI = functions.https.onRequest(main);
 export default db;
+export const addUserToList = functions.auth
+  .user()
+  .onCreate((userRecord) => mailchimp_handler({ user: userRecord }));

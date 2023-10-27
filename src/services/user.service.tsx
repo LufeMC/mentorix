@@ -10,6 +10,7 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 import { getCurrentDate } from '../utils/date';
+import MailchimpService from './mailchimp.service';
 
 const authType = getAuth();
 const collectionRef = 'users';
@@ -80,6 +81,7 @@ const signUp = async (
 
       await setDoc(doc(firestore, collectionRef, userCredentials.user.uid), user);
       await sendEmailVerification(userCredentials.user);
+      await MailchimpService.setMailchimp(user);
       successHandling('Sign up successfull! Now, enter your email and verify your account', false);
     })
     .catch((err) => {
@@ -151,7 +153,8 @@ const googleLogin = (
             premium: false,
           } as User;
 
-          await setDoc(doc(firestore, collectionRef, userCredentials.uid), user); // change!
+          await setDoc(doc(firestore, collectionRef, userCredentials.uid), user);
+          await MailchimpService.setMailchimp(user);
 
           user.id = userCredentials.uid;
         }

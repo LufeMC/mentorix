@@ -124,7 +124,7 @@ export default function RecipePage() {
     if (!user) {
       redirectToAuth(recipe!.id, 'bookmark');
     } else {
-      if (!user.premium) {
+      if (user.premium) {
         navigate('/recipes');
       } else {
         await RecipeService.bookmarkRecipe(

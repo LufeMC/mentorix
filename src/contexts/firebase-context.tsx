@@ -11,6 +11,7 @@ import { RecipesAtom } from '../stores/recipesStore';
 import { useSetAtom } from 'jotai';
 import { TempUserAtom } from '../stores/tempUserStore';
 import { LoadingAtom } from '../stores/loadingStore';
+import MailchimpService from '../services/mailchimp.service';
 
 interface FirebaseContextProps {
   children?: ReactNode;
@@ -68,6 +69,8 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
 
         if (!userCopy!.renewed) {
           userCopy.premium = false;
+
+          await MailchimpService.setMailchimp(userCopy);
         }
 
         UserService.updateUser(firestore, userCopy as User, setUserAtom);

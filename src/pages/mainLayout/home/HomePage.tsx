@@ -233,10 +233,10 @@ export default function HomePage() {
         </div>
         <div className={styles.summary}>
           <Summary text={text} setText={setText} selectedItems={selectedItems} />
-          {loading ? null : !tempUser || (tempUser && tempUser.recipesGenerated < 5) ? (
+          {loading ? null : !tempUser || (tempUser && tempUser.recipesGenerated < 5) || user ? (
             (user && !user?.premium && user!.recipesGenerated < 20) ||
             (tempUser && tempUser.recipesGenerated < 5) ||
-            user?.premium ? (
+            (user && !user?.premium) ? (
               <Button
                 text="Create recipe"
                 onClick={createRecipe}

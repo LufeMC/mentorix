@@ -36,7 +36,7 @@ export default function RecipesPage() {
 
   return (
     <div className={styles.recipesContainer}>
-      {userAtom?.premium ? (
+      {!userAtom?.premium ? (
         recipes.length ? (
           <div className={styles.recipes}>
             {recipes.map((recipe) => (
