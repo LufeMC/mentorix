@@ -45,16 +45,22 @@ export const mailchimp_handler = async ({ user, plan_renewed = false }) => {
     if (!plan_renewed) {
       tagName = 'Premium';
     } else {
-      tagName = 'Plan_renewed';
+      tagName = 'Plan Renewed';
     }
   }
 
   try {
     const userMD5 = findUserMD5(email);
 
-    const existingUser = await mailchimp.get(
-      `/lists/${mailchimpListId}/members/${userMD5}`
-    );
+    let existingUser;
+
+    try {
+      existingUser = await mailchimp.get(
+        `/lists/${mailchimpListId}/members/${userMD5}`
+      );
+    } catch {
+      existingUser = false;
+    }
 
     if (existingUser) {
       await mailchimp.put(
@@ -91,10 +97,44 @@ export const mailchimp_handler = async ({ user, plan_renewed = false }) => {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let tags: any[] = [];
+
+    try {
+      const response = await mailchimp.get(
+        `/lists/${mailchimpListId}/members/${md5(email)}/tags`
+      );
+      tags = response.tags.map((tag) => ({
+        name: tag.name,
+        status: 'inactive',
+      }));
+    } catch {
+      tags = [];
+    }
+
+    const tagExists = tags.find((tag) => tag.name === tagName);
+
+    tags = tagExists
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        tags.map((tag: any) => {
+          if (tag.name === tagName) {
+            tag.status = 'active';
+          }
+
+          return tag;
+        })
+      : [
+          ...tags,
+          {
+            name: tagName,
+            status: 'active',
+          },
+        ];
+
     await mailchimp.post(
       `/lists/${mailchimpListId}/members/${md5(email)}/tags`,
       {
-        tags: [{ name: tagName, status: 'active' }],
+        tags,
       }
     );
     logger.log('tags added');
