@@ -3,7 +3,7 @@ import { FcGoogle } from 'react-icons/fc';
 
 interface GoogleButtonProps {
   text: string;
-  loading: boolean;
+  disabled: boolean;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
 }
 
@@ -13,7 +13,7 @@ export default function GoogleButton(props: GoogleButtonProps) {
       icon={<FcGoogle />}
       onClick={props.onClick}
       text={`${props.text} with Google`}
-      loading={props.loading}
+      disabled={props.disabled}
     />
   );
 }

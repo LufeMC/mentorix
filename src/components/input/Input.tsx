@@ -11,6 +11,7 @@ interface InputProps {
   onIconBeforeClick?: () => void;
   onIconAfterClick?: () => void;
   hasError?: boolean;
+  disabled?: boolean;
 }
 
 export default function Input(props: InputProps) {
@@ -24,6 +25,7 @@ export default function Input(props: InputProps) {
         placeholder={props.placeholder}
         value={props.value}
         onChange={props.onChange}
+        disabled={props.disabled}
       />
       {props.iconAfter && <props.iconAfter className={styles.iconAfter} onClick={props.onIconAfterClick} />}
     </div>

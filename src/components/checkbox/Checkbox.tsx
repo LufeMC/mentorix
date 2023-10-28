@@ -6,6 +6,7 @@ interface CheckboxProps {
   checked?: boolean;
   hasError?: boolean;
   link?: string;
+  disabled?: boolean;
 }
 
 export default function Checkbox(props: CheckboxProps) {
@@ -18,7 +19,12 @@ export default function Checkbox(props: CheckboxProps) {
       ) : (
         props.text
       )}
-      <input type="checkbox" checked={props.checked} onChange={(e) => props.onChange(e.target.checked)} />
+      <input
+        type="checkbox"
+        checked={props.checked}
+        onChange={(e) => props.onChange(e.target.checked)}
+        disabled={props.disabled}
+      />
       <span className={styles.checkmark}></span>
     </label>
   );

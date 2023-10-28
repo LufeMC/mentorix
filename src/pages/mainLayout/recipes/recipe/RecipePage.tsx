@@ -141,11 +141,10 @@ export default function RecipePage() {
   };
 
   const unbookmarkRecipe = async () => {
-    if (user) {
-      redirectToAuth(recipe!.id, 'share');
-    } else {
-      await RecipeService.unBookmarkRecipe(firebaseContext.firestore, user, setUser, recipes, setRecipes, recipe);
-    }
+    // if (user) {
+    //   redirectToAuth(recipe!.id, 'share');
+    // } else {
+    await RecipeService.unBookmarkRecipe(firebaseContext.firestore, user, setUser, recipes, setRecipes, recipe);
   };
 
   return (

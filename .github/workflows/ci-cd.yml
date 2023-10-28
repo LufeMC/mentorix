@@ -1,0 +1,212 @@
+name: CI/CD
+
+on: push
+
+jobs:
+  build_deploy_cookii_api_testing:
+    name: Build & Deploy Cookii App API Staging
+    runs-on: ${{ matrix.os }}
+    if: github.ref != 'refs/heads/main'
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node: [16]
+
+    steps:
+      - name: Checkout GitHub Action
+        uses: actions/checkout@master
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@master
+        with:
+          node-version: ${{ matrix.node }}
+          check-latest: true
+
+      - name: Switch to Testing Alias
+        uses: w9jds/firebase-action@master
+        with:
+          args: use cookii-test
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Install Functions Dependencies
+        run: |
+          cd functions
+          yarn install
+
+      - name: Set Firebase Testing Configs
+        uses: w9jds/firebase-action@master
+        with:
+          args: functions:config:set gpt.api_key=${{ secrets.GPT_API_KEY }} stripe.api_key=${{ secrets.TESTING_STRIPE_API_KEY }} mailchimp.api_key=${{ secrets.TESTING_MAILCHIMP_API_KEY }} mailchimp.listid=${{ secrets.TESTING_MAILCHIMP_LIST_ID }}
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy Staging Functions
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions:cookiiAPI
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  build_deploy_cookii_api_prod:
+    name: Build & Deploy Cookii App API Staging
+    runs-on: ${{ matrix.os }}
+    if: github.ref == 'refs/heads/main'
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node: [16]
+
+    steps:
+      - name: Checkout GitHub Action
+        uses: actions/checkout@master
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@master
+        with:
+          node-version: ${{ matrix.node }}
+          check-latest: true
+
+      - name: Switch to Testing Alias
+        uses: w9jds/firebase-action@master
+        with:
+          args: use cookii-dev
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Install Functions Dependencies
+        run: |
+          cd functions
+          yarn install
+
+      - name: Set Firebase Testing Configs
+        uses: w9jds/firebase-action@master
+        with:
+          args: functions:config:set gpt.api_key=${{ secrets.GPT_API_KEY }} stripe.api_key=${{ secrets.PROD_STRIPE_API_KEY }} mailchimp.api_key=${{ secrets.PROD_MAILCHIMP_API_KEY }} mailchimp.listid=${{ secrets.PROD_MAILCHIMP_LIST_ID }}
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy Staging Functions
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions:cookiiAPI
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  build_deploy_test:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    if: github.ref != 'refs/heads/main'
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node: [16]
+
+    steps:
+      - name: Checkout Github Action
+        uses: actions/checkout@master
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@master
+        with:
+          node-version: ${{ matrix.node }}
+          check-latest: true
+
+      - name: Create env file
+        uses: SpicyPizza/create-envfile@v1.3
+        with:
+          envkey_VITE_FIREBASE_API_KEY: ${{ secrets.TESTING_API_KEY }}
+          envkey_VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.TESTING_AUTH_DOMAIN }}
+          envkey_VITE_FIREBASE_PROJECT_ID: ${{ secrets.TESTING_PROJECT_ID }}
+          envkey_VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.TESTING_STORAGE_BUCKET }}
+          envkey_VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.TESTING_MESSAGING_SENDER_ID }}
+          envkey_VITE_FIREBASE_APP_ID: ${{ secrets.TESTING_APP_ID }}
+          envkey_VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.TESTING_MEASUREMENT_ID }}
+
+          envkey_VITE_API_URL: ${{ secrets.TESTING_API_URL }}
+          fail_on_empty: true
+          directory: variables
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Build Prod
+        run: npm run build
+
+      - name: Switch to Prod Alias
+        uses: w9jds/firebase-action@master
+        with:
+          args: 'use cookii-test'
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy Prod Website
+        uses: w9jds/firebase-action@master
+        with:
+          args: 'deploy --only hosting'
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  build_deploy_prod:
+    name: Build & Deploy Prod Branch
+    runs-on: ${{ matrix.os }}
+    if: github.ref == 'refs/heads/main'
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node: [16]
+
+    steps:
+      - name: Checkout Github Action
+        uses: actions/checkout@master
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@master
+        with:
+          node-version: ${{ matrix.node }}
+          check-latest: true
+
+      - name: Create env file
+        uses: SpicyPizza/create-envfile@v1.3
+        with:
+          envkey_VITE_FIREBASE_API_KEY: ${{ secrets.PROD_API_KEY }}
+          envkey_VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.PROD_AUTH_DOMAIN }}
+          envkey_VITE_FIREBASE_PROJECT_ID: ${{ secrets.PROD_PROJECT_ID }}
+          envkey_VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.PROD_STORAGE_BUCKET }}
+          envkey_VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.PROD_MESSAGING_SENDER_ID }}
+          envkey_VITE_FIREBASE_APP_ID: ${{ secrets.PROD_APP_ID }}
+          envkey_VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.PROD_MEASUREMENT_ID }}
+
+          envkey_VITE_API_URL: ${{ secrets.PROD_API_URL }}
+          fail_on_empty: true
+          directory: variables
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Build Prod
+        run: npm run build
+
+      - name: Switch to Prod Alias
+        uses: w9jds/firebase-action@master
+        with:
+          args: 'use cookii-dev'
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy Prod Website
+        uses: w9jds/firebase-action@master
+        with:
+          args: 'deploy --only hosting'
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

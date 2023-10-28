@@ -78,7 +78,7 @@ export default function HomePage() {
   const [text, setText] = useState<JSX.Element>(<></>);
 
   const addOrRemoveItem = (itemName: string, category: string, add: boolean, allowMultile: boolean) => {
-    if (!tempUser || (tempUser && tempUser.recipesGenerated < 5)) {
+    if (!tempUser || (tempUser && tempUser.recipesGenerated < 5) || user) {
       let selectedItemsInCategory = [...selectedItems[category as keyof RecipeOptions]];
 
       if (add) {

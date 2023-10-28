@@ -2,7 +2,6 @@ import styles from './AuthPage.module.scss';
 import { UserLogin } from '../../types/user';
 import { useFormik } from 'formik';
 import TextInput from '../../components/input/textInput/TextInput';
-import Background from '../../assets/img/background.png';
 import Logo from '../../assets/img/logo.svg';
 import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff, HiOutlineUserCircle } from 'react-icons/hi';
 import { useContext, useEffect, useRef, useState } from 'react';
@@ -19,6 +18,7 @@ import { UserAtom } from '../../stores/userStore';
 import { Alert, AlertAtom } from '../../stores/alertStore';
 import { LoadingAtom } from '../../stores/loadingStore';
 import { logEvent } from 'firebase/analytics';
+import LottieAnimation from '../../components/lotteAnimation/LottieAnimation';
 
 const modes = {
   login: 'login',
@@ -30,8 +30,7 @@ export default function AuthPage() {
   const [isPasswordShown, setIsPasswordShown] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [mode, setMode] = useState<keyof typeof modes>('login');
-  const [emailLoading, setEmailLoading] = useState<boolean>(false);
-  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+  const [loginLoading, setLoginlLoading] = useState<boolean>(false);
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 
   const firebaseContext = useContext(FirebaseContext);
@@ -71,7 +70,7 @@ export default function AuthPage() {
       password: '',
     } as UserLogin,
     onSubmit: async (values) => {
-      setEmailLoading(true);
+      setLoginlLoading(true);
       if (validateInputs()) {
         if (values.name) {
           await UserService.signUp(firebaseContext.auth, firebaseContext.firestore, values, setError, setSuccess);
@@ -97,7 +96,7 @@ export default function AuthPage() {
           );
         }
       } else {
-        setEmailLoading(false);
+        setLoginlLoading(false);
       }
     },
   });
@@ -184,8 +183,8 @@ export default function AuthPage() {
       type: 'error',
     };
     alertContext.startAlert(newAlert);
-    setEmailLoading(false);
-    setGoogleLoading(false);
+    setLoginlLoading(false);
+    setLoginlLoading(false);
     setAcceptedTerms(false);
   };
 
@@ -196,8 +195,8 @@ export default function AuthPage() {
     };
     alertContext.startAlert(newAlert);
 
-    setEmailLoading(false);
-    setGoogleLoading(false);
+    setLoginlLoading(false);
+    setLoginlLoading(false);
     setAcceptedTerms(false);
 
     changeMode('login');
@@ -209,7 +208,7 @@ export default function AuthPage() {
   };
 
   const googleLogin = async () => {
-    setGoogleLoading(true);
+    setLoginlLoading(true);
     let redirectDestiny = '/';
     const recipeId = window.sessionStorage.getItem('recipeId');
 
@@ -233,83 +232,94 @@ export default function AuthPage() {
   return (
     initiated && (
       <div className={styles.authPage}>
-        <div className={styles.image}>
-          <img src={Background} alt="food background" />
+        <div className={styles.panel}>
+          <div className={styles.animation}>
+            <LottieAnimation />
+          </div>
+          <div className={styles.text}>
+            <h1>Cookii - Your AI Sous Chef</h1>
+            <h5>Cook Creatively, Savor Fully, Discover Endlessly!</h5>
+          </div>
         </div>
         <div className={styles.loginBox}>
           <img src={Logo} alt="cookii logo" className={styles.logo} />
-          <div>
-            <h1>Welcome!</h1>
-            <div className={styles.createAccount}>
-              <TextButton
-                text={mode === 'login' ? 'Create a free account' : 'Log in'}
-                onClick={() => changeMode()}
-                loading={false}
-              />
-              <span>or {mode === 'login' ? 'log in' : 'create a free account'} to enter Cookii</span>
-            </div>
-          </div>
-          <div>
-            {mode === 'signup' && (
-              <TextInput
-                title="Name"
-                id="name"
-                type="text"
-                placeholder="Enter your name"
-                value={formik.values.name as string}
-                onChange={formik.handleChange}
-                iconBefore={HiOutlineUserCircle}
-                hasError={validationErrors.includes('name')}
-              />
-            )}
-            <TextInput
-              title="Email"
-              id="email"
-              type="email"
-              placeholder="Enter your email address"
-              value={formik.values.email}
-              onChange={formik.handleChange}
-              iconBefore={HiOutlineMail}
-              hasError={validationErrors.includes('email')}
-            />
-            <TextInput
-              title="Password"
-              id="password"
-              type={isPasswordShown ? 'text' : 'password'}
-              placeholder="Enter your password"
-              value={formik.values.password}
-              onChange={formik.handleChange}
-              iconBefore={HiOutlineLockClosed}
-              iconAfter={isPasswordShown ? HiOutlineEye : HiOutlineEyeOff}
-              onIconAfterClick={() => setIsPasswordShown((prev) => !prev)}
-              hasError={validationErrors.includes('password')}
-            />
-            {mode === 'login' ? (
-              <div className={styles.forgotPassword}>
-                <TextButton text="Forgot password?" onClick={submitAuth} loading={false} />
+          <div className={styles.loginBoxContent}>
+            <div>
+              <h1>Welcome!</h1>
+              <div className={styles.createAccount}>
+                <TextButton
+                  text={mode === 'login' ? 'Create a free account' : 'Log in'}
+                  onClick={() => changeMode()}
+                  disabled={loginLoading}
+                />
+                <span>or {mode === 'login' ? 'log in' : 'create a free account'} to enter Cookii</span>
               </div>
-            ) : (
-              <Checkbox
-                text="Accept the Terms & Conditions, Privacy Policy and Cookies Policy"
-                checked={acceptedTerms}
-                onChange={setAcceptedTerms}
-                hasError={validationErrors.includes('terms')}
-                link="https://scratch-molybdenum-a71.notion.site/Cookii-30e07e8a4a88462d8bb4482f4741563e?pvs=4/"
+            </div>
+            <div>
+              {mode === 'signup' && (
+                <TextInput
+                  title="Name"
+                  id="name"
+                  type="text"
+                  placeholder="Enter your name"
+                  value={formik.values.name as string}
+                  onChange={formik.handleChange}
+                  iconBefore={HiOutlineUserCircle}
+                  hasError={validationErrors.includes('name')}
+                  disabled={loginLoading}
+                />
+              )}
+              <TextInput
+                title="Email"
+                id="email"
+                type="email"
+                placeholder="Enter your email address"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                iconBefore={HiOutlineMail}
+                hasError={validationErrors.includes('email')}
+                disabled={loginLoading}
               />
-            )}
-            <Button text={mode === 'login' ? 'Log in' : 'Sign up'} onClick={submitAuth} loading={emailLoading} />
-          </div>
-          <div className={styles.or}>
-            <div />
-            <span>or</span>
-            <div />
-          </div>
-          <div>
-            <GoogleButton
-              onClick={googleLogin}
-              text={mode === 'login' ? 'Log in' : 'Sign up'}
-              loading={googleLoading}
-            />
+              <TextInput
+                title="Password"
+                id="password"
+                type={isPasswordShown ? 'text' : 'password'}
+                placeholder="Enter your password"
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                iconBefore={HiOutlineLockClosed}
+                iconAfter={isPasswordShown ? HiOutlineEye : HiOutlineEyeOff}
+                onIconAfterClick={() => setIsPasswordShown((prev) => !prev)}
+                hasError={validationErrors.includes('password')}
+                disabled={loginLoading}
+              />
+              {mode === 'login' ? // <div className={styles.forgotPassword}>
+              //   <TextButton text="Forgot password?" onClick={submitAuth} disabled={loginLoading} />
+              // </div>
+              null : (
+                <Checkbox
+                  text="Accept the Terms & Conditions, Privacy Policy and Cookies Policy"
+                  checked={acceptedTerms}
+                  onChange={setAcceptedTerms}
+                  hasError={validationErrors.includes('terms')}
+                  link="https://scratch-molybdenum-a71.notion.site/Cookii-30e07e8a4a88462d8bb4482f4741563e?pvs=4/"
+                  disabled={loginLoading}
+                />
+              )}
+              <Button text={mode === 'login' ? 'Log in' : 'Sign up'} onClick={submitAuth} disabled={loginLoading} />
+            </div>
+            <div className={styles.or}>
+              <div />
+              <span>or</span>
+              <div />
+            </div>
+            <div>
+              <GoogleButton
+                onClick={googleLogin}
+                text={mode === 'login' ? 'Log in' : 'Sign up'}
+                disabled={loginLoading}
+              />
+            </div>
           </div>
         </div>
       </div>

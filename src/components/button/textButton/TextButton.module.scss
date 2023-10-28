@@ -5,13 +5,21 @@
 
   button {
     background: transparent;
-    color: $black;
+    color: $red;
     font-size: 0.8rem;
     padding: 0;
     text-decoration: underline;
 
     &:hover {
       background: transparent;
+      text-decoration: none;
+    }
+
+    &:disabled,
+    [disabled] {
+      color: $light-grey;
+      background-color: transparent;
+      cursor: default;
     }
   }
 }

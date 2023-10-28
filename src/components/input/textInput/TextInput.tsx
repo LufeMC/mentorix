@@ -13,6 +13,7 @@ interface TextInputProps {
   onIconBeforeClick?: () => void;
   onIconAfterClick?: () => void;
   hasError?: boolean;
+  disabled?: boolean;
 }
 
 export default function TextInput(props: TextInputProps) {
@@ -30,6 +31,7 @@ export default function TextInput(props: TextInputProps) {
         onIconBeforeClick={props.onIconBeforeClick}
         onIconAfterClick={props.onIconAfterClick}
         hasError={props.hasError}
+        disabled={props.disabled}
       />
     </div>
   );
