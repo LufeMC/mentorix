@@ -33,7 +33,7 @@ jobs:
       - name: Install Functions Dependencies
         run: |
           cd functions
-          yarn install
+          npm run install
 
       - name: Set Firebase Testing Configs
         uses: w9jds/firebase-action@master
@@ -42,7 +42,7 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
-      - name: Deploy Staging Functions
+      - name: Deploy Test Functions
         uses: w9jds/firebase-action@master
         with:
           args: deploy --only functions:cookiiAPI
@@ -69,7 +69,7 @@ jobs:
           node-version: ${{ matrix.node }}
           check-latest: true
 
-      - name: Switch to Testing Alias
+      - name: Switch to Prod Alias
         uses: w9jds/firebase-action@master
         with:
           args: use cookii-dev
@@ -88,7 +88,7 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
-      - name: Deploy Staging Functions
+      - name: Deploy Prod Functions
         uses: w9jds/firebase-action@master
         with:
           args: deploy --only functions:cookiiAPI
@@ -138,7 +138,7 @@ jobs:
       - name: Build Prod
         run: npm run build
 
-      - name: Switch to Prod Alias
+      - name: Switch to Testing Alias
         uses: w9jds/firebase-action@master
         with:
           args: 'use cookii-test'

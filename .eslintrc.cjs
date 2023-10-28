@@ -21,7 +21,7 @@ module.exports = {
       },
     },
   },
-  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'env.d.ts'],
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'env.d.ts', 'functions'],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh'],
   rules: {
