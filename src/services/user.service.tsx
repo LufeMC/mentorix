@@ -172,6 +172,7 @@ const googleLogin = (
 
 const authErrorHandling = (err: FirebaseError) => {
   let errorMessage = '';
+  console.log(err);
   switch (err.code) {
     case 'auth/invalid-login-credentials':
       errorMessage = 'Invalid credentials. Please check your email and password.';
