@@ -172,6 +172,7 @@ const googleLogin = (
 
 const authErrorHandling = (err: FirebaseError) => {
   let errorMessage = '';
+  // eslint-disable-next-line no-console
   console.log(err);
   switch (err.code) {
     case 'auth/invalid-login-credentials':
