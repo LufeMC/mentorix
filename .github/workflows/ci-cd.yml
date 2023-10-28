@@ -4,7 +4,7 @@ on: push
 
 jobs:
   build_deploy_cookii_api_testing:
-    name: Build & Deploy Cookii App API Staging
+    name: Build & Deploy Cookii App API Test
     runs-on: ${{ matrix.os }}
     if: github.ref != 'refs/heads/main'
 
@@ -50,7 +50,7 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
   build_deploy_cookii_api_prod:
-    name: Build & Deploy Cookii App API Staging
+    name: Build & Deploy Cookii App API Prod
     runs-on: ${{ matrix.os }}
     if: github.ref == 'refs/heads/main'
 
@@ -96,7 +96,7 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
   build_deploy_test:
-    name: Build
+    name: Build and Deploy Test Branch
     runs-on: ${{ matrix.os }}
     if: github.ref != 'refs/heads/main'
 
