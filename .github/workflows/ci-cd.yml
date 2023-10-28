@@ -128,7 +128,6 @@ jobs:
 
           envkey_VITE_API_URL: ${{ secrets.TESTING_API_URL }}
           fail_on_empty: true
-          directory: variables
 
       - name: Install Dependencies
         run: npm install
@@ -186,7 +185,6 @@ jobs:
 
           envkey_VITE_API_URL: ${{ secrets.PROD_API_URL }}
           fail_on_empty: true
-          directory: variables
 
       - name: Install Dependencies
         run: npm install
