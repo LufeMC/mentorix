@@ -240,10 +240,8 @@ export default function HomePage() {
               <Button
                 text="Create recipe"
                 onClick={createRecipe}
-                loading={loadingRecipe}
-                loadingText="Creating recipe"
                 icon={<img src={WhiteLogo} alt="black_logo" />}
-                disabled={!canCreateRecipe()}
+                disabled={!canCreateRecipe() || loadingRecipe}
               />
             ) : (
               <span>

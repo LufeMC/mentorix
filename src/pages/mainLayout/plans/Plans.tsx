@@ -111,7 +111,6 @@ export default function Plans() {
           <div className={styles.actions}>
             <WhiteButton
               text={userAtom?.premium ? 'Manage your plan' : 'Select this plan'}
-              loading={false}
               onClick={() => {
                 logEvent(firebaseContext.analytics, userAtom?.premium ? 'manage_plan_select' : 'premium_plan_select');
                 window.open(
