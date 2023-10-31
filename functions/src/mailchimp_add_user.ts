@@ -93,7 +93,7 @@ export const mailchimp_handler = async ({ user, plan_renewed = false }) => {
     }
   } catch (err) {
     logger.log(`Subscriber error: ${err}`);
-    return `Subscriber error: ${err}. API Key: ${mailchimpApiKey}, listID: ${mailchimpListId}`;
+    return `Subscriber error: ${err}.`;
   }
 
   try {

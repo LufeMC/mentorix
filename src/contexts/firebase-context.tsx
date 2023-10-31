@@ -103,7 +103,7 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
   const retrieveUser = async (user: any) => {
     const newUser = await UserService.getUser(firestore, user.uid);
 
-    if (typeof newUser !== 'string' && user.emailVerified) {
+    if (newUser && typeof newUser !== 'string' && user.emailVerified) {
       await retrieveRecipes(newUser);
       setUserAtom(newUser);
       setLoadingLog(false);

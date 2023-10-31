@@ -33,7 +33,7 @@ export default function RecipeCard(props: RecipeCardProps) {
             <span>Created by {props.recipe.creator ? props.recipe.creator?.name.split(' ')[0] : 'you'}</span>
             <div className={styles.iconItem}>
               <AiFillLike />
-              <span>{props.recipe.likes.length ?? 0}</span>
+              <span>{props.recipe.likes ? props.recipe.likes.length : 0}</span>
             </div>
           </div>
           <div className={styles.footerRow}>

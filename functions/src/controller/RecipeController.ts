@@ -79,7 +79,6 @@ const response = async (text: string) => {
 
     return recipeJson;
   } catch (err) {
-    console.log(err);
     throw err;
   }
 };
@@ -112,10 +111,8 @@ const generateImage = async (recipeJSON: any) => {
       expires: '01-01-2100', // Adjust the expiration date as needed
     });
 
-    console.log(downloadURL);
     return downloadURL;
   } catch (err) {
-    console.log(err);
     throw err;
   }
 };

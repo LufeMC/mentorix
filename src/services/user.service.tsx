@@ -17,16 +17,18 @@ import { v4 as uuidv4 } from 'uuid';
 const authType = getAuth();
 const collectionRef = 'users';
 
-const getUser = async (firestore: Firestore, userId: string): Promise<User | string> => {
-  const usersRef = doc(firestore, collectionRef, userId);
-  const userSnap = await getDoc(usersRef);
+const getUser = async (firestore: Firestore, userId: string) => {
+  if (userId) {
+    const usersRef = doc(firestore, collectionRef, userId);
+    const userSnap = await getDoc(usersRef);
 
-  if (userSnap.exists()) {
-    const user = userSnap.data() as User;
-    user.id = userSnap.id;
-    return user;
-  } else {
-    return "This user doesn't exist";
+    if (userSnap.exists()) {
+      const user = userSnap.data() as User;
+      user.id = userSnap.id;
+      return user;
+    } else {
+      return "This user doesn't exist";
+    }
   }
 };
 
@@ -108,7 +110,7 @@ const login = async (
         setLoadingLog(true);
         const user = await UserService.getUser(firestore, userCredentials.user.uid);
 
-        if (typeof user !== 'string') {
+        if (user && typeof user !== 'string') {
           user.id = userCredentials.user.uid;
           setUser(user);
           await retrieveRecipes(user as User);
@@ -172,8 +174,6 @@ const googleLogin = (
       }
     })
     .catch((err) => {
-      // eslint-disable-next-line no-console
-      console.log(err);
       errorHandling(UserService.authErrorHandling(err));
     });
 };
