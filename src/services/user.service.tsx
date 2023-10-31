@@ -172,6 +172,7 @@ const googleLogin = (
       }
     })
     .catch((err) => {
+      // eslint-disable-next-line no-console
       console.log(err);
       errorHandling(UserService.authErrorHandling(err));
     });
