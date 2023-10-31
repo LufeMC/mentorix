@@ -13,6 +13,7 @@ import RecipeCardShimmer from '../../../components/recipeCardShimmer/RecipeCardS
 import RecipeCard from '../../../components/recipeCard/RecipeCard';
 import TextButton from '../../../components/button/textButton/TextButton';
 import { useNavigate } from 'react-router-dom';
+import { Recipe } from '../../../types/recipe';
 
 export default function HomePage() {
   const user = useAtomValue(UserAtom);
@@ -37,6 +38,14 @@ export default function HomePage() {
       setCommunityError(true);
     } else {
       window.open(import.meta.env.VITE_PAYMENT_LINK, '_self');
+    }
+  };
+
+  const navigateToRecipe = (recipe: Recipe) => {
+    if (user?.premium) {
+      navigate(`/recipes/${recipe.id}`);
+    } else {
+      setCommunityError(true);
     }
   };
 
@@ -91,7 +100,11 @@ export default function HomePage() {
               communityRecipes.length ? (
                 <div className={styles.communityRecipeList}>
                   {communityRecipes.slice(0, 2).map((recipe, index) => (
-                    <RecipeCard recipe={recipe} key={`recipe card of community recipe #${recipe.id} - ${index}`} />
+                    <RecipeCard
+                      recipe={recipe}
+                      key={`recipe card of community recipe #${recipe.id} - ${index}`}
+                      onClick={() => navigateToRecipe(recipe)}
+                    />
                   ))}
                 </div>
               ) : (

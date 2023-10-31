@@ -6,13 +6,17 @@ import { LuChefHat } from 'react-icons/lu';
 
 interface RecipeCardProps {
   recipe: Recipe;
+  onClick?: () => void;
 }
 
 export default function RecipeCard(props: RecipeCardProps) {
   const navigate = useNavigate();
 
   return (
-    <button className={styles.recipeCardContainer} onClick={() => navigate(`/recipes/${props.recipe.id}`)}>
+    <button
+      className={styles.recipeCardContainer}
+      onClick={() => (props.onClick ? props.onClick() : navigate(`/recipes/${props.recipe.id}`))}
+    >
       <div className={`${styles.recipeCard} ${props.recipe && props.recipe.img ? styles.imageBackground : ''}`}>
         {props.recipe && props.recipe.img && (
           <div className={styles.backgroundOverlay} style={{ backgroundImage: `url(${props.recipe.img})` }}></div>
