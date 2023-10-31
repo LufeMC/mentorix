@@ -26,7 +26,7 @@ export default function RecipeCard(props: RecipeCardProps) {
           <span>{props.recipe.servings ?? 'No'} servings</span>
         </div>
         <div className={styles.title}>
-          <h1>{props.recipe.title}</h1>
+          <h2>{props.recipe.title}</h2>
         </div>
         <div className={styles.footer}>
           <div className={styles.footerRow}>
