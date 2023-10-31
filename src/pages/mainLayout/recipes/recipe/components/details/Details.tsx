@@ -36,15 +36,16 @@ export default function RecipeDetails(props: RecipeDetailsProps) {
       <div className={styles.ingredientContainer}>
         <h2>Ingredients</h2>
         <div className={styles.ingredientList}>
-          {props.recipe.ingredients.map((ingredient) =>
-            ingredient.ingredient ? (
-              <div className={styles.ingredient} key={ingredient.ingredient}>
-                <Checkbox text="" onChange={() => {}} />
-                <span className={styles.quantity}>{capitalizeWord(ingredient.quantity)}</span>
-                <span className={styles.ingredientName}>{capitalizeWord(ingredient.ingredient)}</span>
-              </div>
-            ) : null,
-          )}
+          {props.recipe.ingredients &&
+            props.recipe.ingredients.map((ingredient) =>
+              ingredient.ingredient ? (
+                <div className={styles.ingredient} key={ingredient.ingredient}>
+                  <Checkbox text="" onChange={() => {}} />
+                  <span className={styles.quantity}>{capitalizeWord(ingredient.quantity)}</span>
+                  <span className={styles.ingredientName}>{capitalizeWord(ingredient.ingredient)}</span>
+                </div>
+              ) : null,
+            )}
         </div>
       </div>
     </div>

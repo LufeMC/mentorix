@@ -56,7 +56,7 @@ export default function RecipePage() {
     if (!recipe) {
       const newRecipe = await RecipeService.getRecipeById(firebaseContext.firestore, recipeId);
 
-      if (typeof recipe === 'string') {
+      if (typeof newRecipe === 'string') {
         alertHandler("This recipe doesn't exist", 'warning');
 
         navigate('/');
@@ -145,9 +145,10 @@ export default function RecipePage() {
             <div className={styles.instructions}>
               <h2>Instructions</h2>
               <div className={styles.steps}>
-                {recipe.instructions.map((instruction, index) => (
-                  <Step text={instruction} step={index + 1} key={instruction} />
-                ))}
+                {recipe.instructions &&
+                  recipe.instructions.map((instruction, index) => (
+                    <Step text={instruction} step={index + 1} key={instruction} />
+                  ))}
               </div>
             </div>
           </div>

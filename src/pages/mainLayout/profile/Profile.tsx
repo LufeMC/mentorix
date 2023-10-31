@@ -86,7 +86,13 @@ export default function Profile() {
     <div className={styles.profileContainer}>
       <h1>Profile</h1>
       <div className={styles.profilePicContainer}>
-        <input id="profile image upload" type="file" onChange={handleFileChange} disabled={loadingLog || isUpdating} />
+        <input
+          id="profile image upload"
+          type="file"
+          onChange={handleFileChange}
+          disabled={loadingLog || isUpdating}
+          accept="image/*"
+        />
         <label htmlFor="profile image upload" className={styles.profilePic}>
           {uploadingImage ? (
             <div className={styles.spinnerContainer}>

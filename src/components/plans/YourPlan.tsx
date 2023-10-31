@@ -40,6 +40,7 @@ export default function YourPlan(props: YourPlanProps) {
           <div className={styles.title}>
             <div className={styles.texts}>
               <h2>Premium</h2>
+              <h2>$8/month</h2>
               <span>Ideal for anyone trying to be a better home cook</span>
             </div>
             <Button
