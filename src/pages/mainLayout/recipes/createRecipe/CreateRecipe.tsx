@@ -255,15 +255,22 @@ export default function CreateRecipe() {
             {isPremiumFeature() && canCreateRecipe() && !user?.premium ? (
               <span>Macronutrients is a premium feature</span>
             ) : null}
-            <Button
-              text={isPremiumFeature() && !user?.premium ? 'Upgrade and create recipe' : 'Create recipe'}
-              onClick={() =>
-                isPremiumFeature() && !user?.premium
-                  ? window.open(import.meta.env.VITE_PAYMENT_LINK, '_self')
-                  : createRecipe()
-              }
-              disabled={!canCreateRecipe() || loadingRecipe}
-            />
+            {user && !user?.premium && user!.recipesGenerated >= 20 ? (
+              <TextButton
+                text="You reached your monthly limit. Upgrade now to continue creating recipes"
+                onClick={() => window.open(import.meta.env.VITE_PAYMENT_LINK, '_self')}
+              />
+            ) : (
+              <Button
+                text={isPremiumFeature() && !user?.premium ? 'Upgrade and create recipe' : 'Create recipe'}
+                onClick={() =>
+                  isPremiumFeature() && !user?.premium
+                    ? window.open(import.meta.env.VITE_PAYMENT_LINK, '_self')
+                    : createRecipe()
+                }
+                disabled={!canCreateRecipe() || loadingRecipe}
+              />
+            )}
             {isPremiumFeature() && canCreateRecipe() && !user?.premium ? (
               <TextButton text="Create recipe without macronutrients" onClick={() => createRecipe(false)} />
             ) : null}
@@ -283,15 +290,22 @@ export default function CreateRecipe() {
             {isPremiumFeature() && canCreateRecipe() && !user?.premium ? (
               <span>Macronutrients is a premium feature</span>
             ) : null}
-            <Button
-              text={isPremiumFeature() && !user?.premium ? 'Upgrade and create recipe' : 'Create recipe'}
-              onClick={() =>
-                isPremiumFeature() && !user?.premium
-                  ? window.open(import.meta.env.VITE_PAYMENT_LINK, '_self')
-                  : createRecipe()
-              }
-              disabled={!canCreateRecipe() || loadingRecipe}
-            />
+            {user && !user?.premium && user!.recipesGenerated >= 20 ? (
+              <TextButton
+                text="You reached your monthly limit. Upgrade now to continue creating recipes"
+                onClick={() => window.open(import.meta.env.VITE_PAYMENT_LINK, '_self')}
+              />
+            ) : (
+              <Button
+                text={isPremiumFeature() && !user?.premium ? 'Upgrade and create recipe' : 'Create recipe'}
+                onClick={() =>
+                  isPremiumFeature() && !user?.premium
+                    ? window.open(import.meta.env.VITE_PAYMENT_LINK, '_self')
+                    : createRecipe()
+                }
+                disabled={!canCreateRecipe() || loadingRecipe}
+              />
+            )}
             {isPremiumFeature() && canCreateRecipe() && !user?.premium ? (
               <TextButton text="Create recipe without macronutrients" onClick={() => createRecipe(false)} />
             ) : null}
