@@ -172,6 +172,7 @@ const googleLogin = (
       }
     })
     .catch((err) => {
+      console.log(err);
       errorHandling(UserService.authErrorHandling(err));
     });
 };
