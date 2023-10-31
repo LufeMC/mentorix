@@ -1,0 +1,54 @@
+@import '../../../../../../assets/styles/variables.scss';
+
+.homeSection {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-content: flex-start;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+
+  @media only screen and (max-width: 700px) {
+    flex-direction: column;
+  }
+
+  .sectionTitle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-content: flex-start;
+    justify-content: flex-start;
+    gap: 5px;
+    white-space: nowrap;
+    flex: 2;
+
+    span {
+      color: $light-middle-grey;
+      font-weight: 500;
+    }
+
+    h3 {
+      text-transform: uppercase;
+      font-weight: 900;
+      color: $black;
+    }
+  }
+
+  .sectionContent {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-content: flex-start;
+    justify-content: flex-start;
+    padding-top: 1rem;
+    gap: 1rem;
+    flex: 8;
+
+    @media only screen and (max-width: 700px) {
+      padding-left: 0;
+      border: 0;
+      gap: 1.5rem;
+    }
+  }
+}

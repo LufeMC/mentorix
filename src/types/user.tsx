@@ -5,6 +5,7 @@ export type User = {
   planRenewalDate: string;
   recipesGenerated: number;
   premium: boolean;
+  profileImage: string;
   password?: string;
   id?: string;
   customerId?: string;

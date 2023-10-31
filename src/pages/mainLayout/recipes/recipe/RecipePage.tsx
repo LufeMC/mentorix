@@ -1,5 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react';
-import Navbar from '../../../../components/navbar/Navbar';
+import { useContext, useEffect, useRef } from 'react';
 import styles from './RecipePage.module.scss';
 import { FirebaseContext } from '../../../../contexts/firebase-context';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -7,14 +6,15 @@ import RecipeService from '../../../../services/recipe.service';
 import { Recipe, recipeRedirects } from '../../../../types/recipe';
 import Step from './components/step/Step';
 import RecipeDetails from './components/details/Details';
-import { BsBookmarkFill, BsBookmark } from 'react-icons/bs';
+import { BsBookmarkFill, BsBookmark, BsTrash } from 'react-icons/bs';
 import { LuShare } from 'react-icons/lu';
 import { AlertContext } from '../../../../contexts/alert-context';
 import { Alert, alertTypes } from '../../../../stores/alertStore';
-import { RecipesAtom } from '../../../../stores/recipesStore';
-import { useAtom } from 'jotai';
+import { RecipeAtom, RecipesAtom } from '../../../../stores/recipesStore';
+import { useAtom, useSetAtom } from 'jotai';
 import { UserAtom } from '../../../../stores/userStore';
 import { logEvent } from 'firebase/analytics';
+import { CurrentPageAtom } from '../../../../stores/loadingStore';
 
 export default function RecipePage() {
   const firebaseContext = useContext(FirebaseContext);
@@ -23,8 +23,8 @@ export default function RecipePage() {
   const navigate = useNavigate();
   const [user, setUser] = useAtom(UserAtom);
   const [recipes, setRecipes] = useAtom(RecipesAtom);
-
-  const [recipe, setRecipe] = useState<Recipe>();
+  const [recipe, setRecipe] = useAtom(RecipeAtom);
+  const setCurrentPage = useSetAtom(CurrentPageAtom);
 
   const contentRef = useRef<HTMLDivElement | null>(null);
   const logging = useRef<boolean>(false);
@@ -32,6 +32,7 @@ export default function RecipePage() {
   useEffect(() => {
     if (recipeId) {
       getRecipe(recipeId);
+      setCurrentPage('recipes-open-recipe');
     }
 
     if (!logging.current) {
@@ -49,16 +50,18 @@ export default function RecipePage() {
   }, [recipe]);
 
   const getRecipe = async (recipeId: string) => {
-    const savedRecipe = recipes!.find((recipe) => recipe.id === recipeId);
+    let recipe = recipes!.find((recipe) => recipe.id === recipeId);
     // const recipeGenerated = window.sessionStorage.getItem('recipeGenerated');
 
-    if (!savedRecipe) {
+    if (!recipe) {
       const newRecipe = await RecipeService.getRecipeById(firebaseContext.firestore, recipeId);
 
-      if (typeof newRecipe === 'string') {
+      if (typeof recipe === 'string') {
         alertHandler("This recipe doesn't exist", 'warning');
 
         navigate('/');
+      } else {
+        recipe = newRecipe as Recipe | undefined;
       }
       // else if (
       //   (!recipeGenerated || recipeGenerated !== recipeId) &&
@@ -71,13 +74,11 @@ export default function RecipePage() {
       //   setRecipe(newRecipe);
       //   redirectActions(newRecipe);
       // }
-      else if (typeof newRecipe !== 'undefined') {
-        setRecipe(newRecipe);
-        redirectActions(newRecipe);
-      }
-    } else {
-      setRecipe(savedRecipe);
-      redirectActions(savedRecipe);
+    }
+
+    if (recipe) {
+      setRecipe(recipe);
+      redirectActions(recipe as Recipe);
     }
   };
 
@@ -100,14 +101,6 @@ export default function RecipePage() {
     window.sessionStorage.removeItem('action');
   };
 
-  const redirectToAuth = (recipeId: string, action: keyof typeof recipeRedirects) => {
-    alertHandler('Please, login or signup to continue', 'warning');
-
-    window.sessionStorage.setItem('recipeId', recipeId);
-    window.sessionStorage.setItem('action', action);
-    navigate('/auth');
-  };
-
   const alertHandler = (text: string, type: keyof typeof alertTypes) => {
     const newAlert: Alert = {
       message: text,
@@ -117,43 +110,49 @@ export default function RecipePage() {
   };
 
   const shareRecipe = (newRecipe?: Recipe) => {
-    RecipeService.shareRecipe(alertHandler, newRecipe, recipe);
+    RecipeService.shareRecipe(alertHandler, newRecipe, recipe as Recipe);
   };
 
   const bookmarkRecipe = async (newRecipe?: Recipe) => {
-    if (!user) {
-      redirectToAuth(recipe!.id, 'bookmark');
-    } else {
-      if (user.premium) {
-        navigate('/recipes');
-      } else {
-        await RecipeService.bookmarkRecipe(
-          firebaseContext.firestore,
-          user,
-          setUser,
-          recipes,
-          setRecipes,
-          newRecipe,
-          recipe,
-        );
-      }
-    }
+    await RecipeService.bookmarkRecipe(
+      firebaseContext.firestore,
+      user,
+      setUser,
+      recipes,
+      setRecipes,
+      newRecipe ? newRecipe : (recipe as Recipe),
+    );
   };
 
-  const unbookmarkRecipe = async () => {
-    // if (user) {
-    //   redirectToAuth(recipe!.id, 'share');
-    // } else {
-    await RecipeService.unBookmarkRecipe(firebaseContext.firestore, user, setUser, recipes, setRecipes, recipe);
+  const unbookmarkRecipe = async (redirect = false) => {
+    await RecipeService.unBookmarkRecipe(
+      firebaseContext.firestore,
+      user,
+      setUser,
+      recipes,
+      setRecipes,
+      recipe as Recipe,
+    );
+
+    if (redirect) {
+      navigate('/recipes');
+    }
   };
 
   return (
     <div className={styles.recipe}>
-      <Navbar darkSchema={true} />
       {recipe && (
         <div ref={contentRef} className={styles.content}>
           <div className={styles.instructionsContainer}>
-            <h1>{recipe.title}</h1>
+            <div className={styles.title}>
+              <h1>{recipe.title}</h1>
+              {recipe.mealType || recipe.servings ? (
+                <div className={styles.titleDetails}>
+                  {recipe.mealType ? <h4>{recipe.mealType}</h4> : null}
+                  {recipe.servings ? <h4>{recipe.servings} Servings</h4> : null}
+                </div>
+              ) : null}
+            </div>
             <div className={styles.instructions}>
               <h2>Instructions</h2>
               <div className={styles.steps}>
@@ -167,11 +166,16 @@ export default function RecipePage() {
             <h1>{recipe.title}</h1>
             <RecipeDetails recipe={recipe} />
             <div className={styles.actions}>
-              {user && user.recipes.includes(recipe.id) ? (
-                <BsBookmarkFill onClick={() => unbookmarkRecipe()} />
-              ) : (
-                <BsBookmark onClick={() => bookmarkRecipe()} />
-              )}
+              {user && user.premium && recipe.creatorId && recipe.creatorId !== user.id ? (
+                user.recipes.includes(recipe.id) ? (
+                  <BsBookmarkFill onClick={() => unbookmarkRecipe()} />
+                ) : (
+                  <BsBookmark onClick={() => bookmarkRecipe()} />
+                )
+              ) : null}
+              {user && user.recipes.includes(recipe.id) && recipe.creatorId && recipe.creatorId === user.id ? (
+                <BsTrash onClick={() => unbookmarkRecipe(true)} />
+              ) : null}
               <LuShare onClick={() => shareRecipe()} />
             </div>
           </div>

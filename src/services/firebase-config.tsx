@@ -10,9 +10,6 @@ const config: FirebaseOptions = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// eslint-disable-next-line no-console
-console.log(import.meta.env.VITE_FIREBASE_API_KEY);
-
 export function getFirebaseConfig() {
   if (!config || !config.apiKey) {
     throw new Error(

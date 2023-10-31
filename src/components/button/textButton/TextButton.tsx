@@ -3,7 +3,7 @@ import styles from './TextButton.module.scss';
 
 interface TextButtonProps {
   text: string;
-  disabled: boolean;
+  disabled?: boolean;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
 }
 

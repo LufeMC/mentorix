@@ -1,8 +1,10 @@
 import { Recipe } from '../../../../../../types/recipe';
 import styles from './Details.module.scss';
-import { PiCookingPot, PiKnife } from 'react-icons/pi';
 import Checkbox from '../../../../../../components/checkbox/Checkbox';
 import { capitalizeWord } from '../../../../../../utils/string';
+import { AiFillClockCircle } from 'react-icons/ai';
+import { LuChefHat } from 'react-icons/lu';
+import { PiCookingPot } from 'react-icons/pi';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
@@ -12,16 +14,22 @@ export default function RecipeDetails(props: RecipeDetailsProps) {
   return (
     <div className={styles.details}>
       <div className={styles.basicDetails}>
-        {props.recipe.preparationTime && (
-          <div className={styles.property}>
-            <PiKnife />
-            <span>Preparation: {props.recipe.preparationTime}</span>
-          </div>
-        )}
         {props.recipe.cookingTime && (
           <div className={styles.property}>
+            <AiFillClockCircle />
+            <span>{props.recipe.cookingTime}</span>
+          </div>
+        )}
+        {props.recipe.cuisine && (
+          <div className={styles.property}>
+            <LuChefHat />
+            <span>{props.recipe.cuisine} Cuisine</span>
+          </div>
+        )}
+        {props.recipe.dietRestrictions?.length && (
+          <div className={styles.property}>
             <PiCookingPot />
-            <span>Cooking: {props.recipe.cookingTime}</span>
+            <span>{props.recipe.dietRestrictions.join(', ')}</span>
           </div>
         )}
       </div>

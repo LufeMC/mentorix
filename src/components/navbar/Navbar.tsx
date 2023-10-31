@@ -1,81 +1,67 @@
 import { Link, useNavigate } from 'react-router-dom';
-import Logo from '../../assets/img/logo.svg';
-import LogoWhite from '../../assets/img/logo-white.svg';
 import styles from './Navbar.module.scss';
-import { useContext } from 'react';
-import { FirebaseContext } from '../../contexts/firebase-context';
-import { signOut } from 'firebase/auth';
-import { AlertContext } from '../../contexts/alert-context';
-import { Alert } from '../../stores/alertStore';
-import IpAddressService from '../../services/ipAddress.service';
-import { LoadingAtom } from '../../stores/loadingStore';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { LoadingRecipeAtom, RecipesAtom } from '../../stores/recipesStore';
+import { useState } from 'react';
+import { CurrentPageAtom, LoadingAtom } from '../../stores/loadingStore';
+import { useAtomValue } from 'jotai';
+import { LoadingRecipeAtom, RecipeAtom } from '../../stores/recipesStore';
 import { UserAtom } from '../../stores/userStore';
-import { TempUserAtom } from '../../stores/tempUserStore';
-import { AiOutlineMail } from 'react-icons/ai';
+
+import { AiOutlinePlus } from 'react-icons/ai';
+import { FaUserAlt } from 'react-icons/fa';
+import Button from '../button/Button';
+import ShimmerButton from '../button/shimmerButton/ShimmerButton';
+import ShimmerText from '../shimmerText/ShimmerText';
 
 interface NavbarProps {
-  darkSchema?: boolean;
+  canCreateRecipe?: boolean;
 }
 
 export default function Navbar(props: NavbarProps) {
-  const [user, setUser] = useAtom(UserAtom);
-  const setTempUser = useSetAtom(TempUserAtom);
-  const setRecipes = useSetAtom(RecipesAtom);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const user = useAtomValue(UserAtom);
   const loadingRecipe = useAtomValue(LoadingRecipeAtom);
-  const [loadingLog, setLoadingLog] = useAtom(LoadingAtom);
-  const firebaseContext = useContext(FirebaseContext);
-  const alertContext = useContext(AlertContext);
+  const loadingLog = useAtomValue(LoadingAtom);
+  const recipeAtom = useAtomValue(RecipeAtom);
+  const currentPage = useAtomValue(CurrentPageAtom);
+
   const navigate = useNavigate();
-
-  const logout = async () => {
-    setLoadingLog(true);
-
-    signOut(firebaseContext.auth);
-    setRecipes([]);
-    setUser(null);
-    await IpAddressService.retrieveTempUser(firebaseContext.firestore, setTempUser);
-
-    setLoadingLog(false);
-
-    const newAlert: Alert = {
-      message: 'Logged out successfully',
-      type: 'success',
-    };
-    alertContext.startAlert(newAlert);
-    navigate('/');
-  };
 
   return (
     <nav
-      className={`${styles.navbar} ${loadingRecipe ? styles.creatingRecipe : ''} ${
-        props.darkSchema ? styles.darkSchema : ''
-      }`}
+      className={`${styles.navbar} ${loadingLog ? styles.loadingLog : ''} ${
+        loadingRecipe ? styles.loadingRecipe : ''
+      } ${recipeAtom && recipeAtom.img && currentPage.includes('open-recipe') ? styles.recipeImageOpen : ''}`}
     >
-      <div className={styles.mainOptions}>
-        <img src={props.darkSchema ? LogoWhite : Logo} alt="logo" />
-        {!loadingLog &&
+      <div className={styles.actions}>
+        {!props.canCreateRecipe &&
           (user ? (
-            <div>
-              <Link to={loadingRecipe ? '#' : '/'}>Home</Link>
-              <Link to={loadingRecipe ? '#' : '/recipes'}>My Recipes</Link>
-              {/* <Link to={loadingRecipe ? '#' : '/plans'}>My Plan</Link> */}
-            </div>
+            <Button
+              text="Create recipe"
+              onClick={() => navigate('/recipes/new')}
+              icon={<AiOutlinePlus />}
+              invisible={currentPage.includes('new')}
+              disabled={loadingRecipe}
+            />
           ) : (
-            <div>
-              <Link to={loadingRecipe ? '#' : '/'}>Home</Link>
-            </div>
+            <ShimmerButton text="Create recipe" />
           ))}
+        <Link to={loadingRecipe ? '#' : '/profile'} className={styles.profile}>
+          {user ? (
+            <button className={styles.name} onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>
+              <div className={styles.profileImg}>
+                {user.profileImage ? <img src={user.profileImage} alt="small profile" /> : <FaUserAlt />}
+              </div>
+              <h4>{user?.name.split(' ')[0]}</h4>
+            </button>
+          ) : (
+            <ShimmerText>
+              <div className={styles.profileImg}></div>
+              <FaUserAlt />
+              <h4>Username</h4>
+            </ShimmerText>
+          )}
+        </Link>
       </div>
-      {!loadingLog && (
-        <div className={styles.logOptions}>
-          <a href="mailto: luisf.moncer@gmail.com">
-            <AiOutlineMail />
-          </a>
-          {user ? <button onClick={logout}>Logout</button> : <Link to={loadingRecipe ? '#' : '/auth'}>Login</Link>}
-        </div>
-      )}
     </nav>
   );
 }

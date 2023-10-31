@@ -14,15 +14,12 @@ router.post('/', async (req, res) => {
     res.status(400).json(errorObj);
   }
 
-  if (!req.body.userId && !req.body.tempUserId) {
+  if (!req.body.userId) {
     errorObj.error_message = 'Missing userId on request body';
     res.status(400).json(errorObj);
   }
 
-  const userValidation = await RecipeController.validateUser(
-    req.body.userId,
-    req.body.tempUserId
-  );
+  const userValidation = await RecipeController.validateUser(req.body.userId);
 
   if (!userValidation.success) {
     errorObj.error_message = userValidation.message;

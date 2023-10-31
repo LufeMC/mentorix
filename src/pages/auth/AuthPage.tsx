@@ -10,7 +10,7 @@ import TextButton from '../../components/button/textButton/TextButton';
 import GoogleButton from '../../components/whiteButton/googleButton/GoogleButton';
 import { FirebaseContext } from '../../contexts/firebase-context';
 import UserService from '../../services/user.service';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Checkbox from '../../components/checkbox/Checkbox';
 import { AlertContext } from '../../contexts/alert-context';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -26,6 +26,8 @@ const modes = {
 };
 
 export default function AuthPage() {
+  const location = useLocation();
+
   const [initiated, setInitiated] = useState<boolean>(false);
   const [isPasswordShown, setIsPasswordShown] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -36,7 +38,6 @@ export default function AuthPage() {
   const firebaseContext = useContext(FirebaseContext);
   const alertContext = useContext(AlertContext);
   const [user, setUser] = useAtom(UserAtom);
-  const setTempUser = useSetAtom(AlertAtom);
   const alert = useAtomValue(AlertAtom);
   const setLoadingLog = useSetAtom(LoadingAtom);
 
@@ -75,15 +76,6 @@ export default function AuthPage() {
         if (values.name) {
           await UserService.signUp(firebaseContext.auth, firebaseContext.firestore, values, setError, setSuccess);
         } else {
-          let redirectDestiny = '/';
-          const recipeId = window.sessionStorage.getItem('recipeId');
-
-          if (recipeId) {
-            redirectDestiny = `/recipes/${recipeId}`;
-            window.sessionStorage.setItem('recipeGenerated', recipeId);
-            window.sessionStorage.removeItem('recipeId');
-          }
-
           await UserService.login(
             firebaseContext.auth,
             firebaseContext.firestore,
@@ -92,7 +84,7 @@ export default function AuthPage() {
             setLoadingLog,
             setError,
             setSuccess,
-            redirectDestiny,
+            firebaseContext.retrieveRecipes,
           );
         }
       } else {
@@ -188,7 +180,7 @@ export default function AuthPage() {
     setAcceptedTerms(false);
   };
 
-  const setSuccess = (success: string, redirect: boolean, redirectDestiny?: string) => {
+  const setSuccess = (success: string, redirect: boolean) => {
     const newAlert: Alert = {
       message: success,
       type: 'success',
@@ -201,23 +193,14 @@ export default function AuthPage() {
 
     changeMode('login');
 
-    if (redirect && redirectDestiny) {
-      setTempUser(null);
-      navigate(redirectDestiny);
+    if (redirect) {
+      const queryParams = new URLSearchParams(location.search);
+      navigate(queryParams.get('next') ?? '/');
     }
   };
 
   const googleLogin = async () => {
     setLoginlLoading(true);
-    let redirectDestiny = '/';
-    const recipeId = window.sessionStorage.getItem('recipeId');
-
-    if (recipeId) {
-      redirectDestiny = `/recipes/${recipeId}`;
-      window.sessionStorage.setItem('recipeGenerated', recipeId);
-      window.sessionStorage.removeItem('recipeId');
-    }
-
     await UserService.googleLogin(
       firebaseContext.auth,
       firebaseContext.firestore,
@@ -225,7 +208,7 @@ export default function AuthPage() {
       setLoadingLog,
       setError,
       setSuccess,
-      redirectDestiny,
+      firebaseContext.retrieveRecipes,
     );
   };
 
@@ -293,10 +276,7 @@ export default function AuthPage() {
                 hasError={validationErrors.includes('password')}
                 disabled={loginLoading}
               />
-              {mode === 'login' ? // <div className={styles.forgotPassword}>
-              //   <TextButton text="Forgot password?" onClick={submitAuth} disabled={loginLoading} />
-              // </div>
-              null : (
+              {mode === 'login' ? null : ( // </div> //   <TextButton text="Forgot password?" onClick={submitAuth} disabled={loginLoading} /> // <div className={styles.forgotPassword}>
                 <Checkbox
                   text="Accept the Terms & Conditions, Privacy Policy and Cookies Policy"
                   checked={acceptedTerms}

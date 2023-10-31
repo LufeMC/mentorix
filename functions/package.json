@@ -18,7 +18,7 @@
     "@sendgrid/mail": "^7.7.0",
     "@types/node-fetch": "^2.6.3",
     "api": "^4.5.2",
-    "axios": "^1.5.1",
+    "axios": "^1.6.0",
     "dotenv": "^16.0.1",
     "firebase-admin": "^10.2.0",
     "firebase-functions": "^3.21.0",
@@ -26,7 +26,8 @@
     "md5": "^2.3.0",
     "openai": "^4.12.4",
     "pg": "^8.7.3",
-    "short-unique-id": "^4.4.4"
+    "short-unique-id": "^4.4.4",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/md5": "^2.3.2",

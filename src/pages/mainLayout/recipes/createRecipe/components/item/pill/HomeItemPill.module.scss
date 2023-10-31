@@ -1,0 +1,15 @@
+@import '../../../../../../../assets/styles/variables.scss';
+
+.homeItemPill {
+  padding: 4px 15px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid $black;
+  width: fit-content;
+  cursor: pointer;
+
+  &.selected {
+    background-color: $red;
+    font-weight: 500;
+  }
+}

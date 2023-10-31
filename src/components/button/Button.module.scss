@@ -17,6 +17,12 @@
   cursor: pointer;
   gap: 0.5rem;
 
+  &.invisible {
+    background: transparent !important;
+    color: transparent !important;
+    cursor: default !important;
+  }
+
   &:hover {
     background: rgba($color: $red, $alpha: 1);
   }

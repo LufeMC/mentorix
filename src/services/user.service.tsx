@@ -11,6 +11,8 @@ import {
 } from 'firebase/auth';
 import { getCurrentDate } from '../utils/date';
 import MailchimpService from './mailchimp.service';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { v4 as uuidv4 } from 'uuid';
 
 const authType = getAuth();
 const collectionRef = 'users';
@@ -76,6 +78,7 @@ const signUp = async (
         recipesGenerated: 0,
         planRenewalDate: getCurrentDate(),
         premium: false,
+        profileImage: '',
       } as User;
       delete user.password;
 
@@ -97,7 +100,7 @@ const login = async (
   setLoadingLog: React.Dispatch<React.SetStateAction<boolean>>,
   errorHandling: (_error: string) => void,
   successHandling: (_success: string, _redirect: boolean, _redirectDestiny?: string) => void,
-  redirectDestiny: string,
+  retrieveRecipes: (_user: User) => void,
 ) => {
   signInWithEmailAndPassword(auth, attemptedUser.email, attemptedUser.password)
     .then(async (userCredentials) => {
@@ -108,9 +111,10 @@ const login = async (
         if (typeof user !== 'string') {
           user.id = userCredentials.user.uid;
           setUser(user);
+          await retrieveRecipes(user as User);
           setLoadingLog(false);
 
-          successHandling('Login successfull!', true, redirectDestiny);
+          successHandling('Login successfull!', true);
         }
       } else {
         errorHandling('Please validate your email before continuing');
@@ -128,7 +132,7 @@ const googleLogin = (
   setLoadingLog: React.Dispatch<React.SetStateAction<boolean>>,
   errorHandling: (_error: string) => void,
   successHandling: (_success: string, _redirect: boolean, _redirectDestiny?: string) => void,
-  redirectDestiny: string,
+  retrieveRecipes: (_user: User) => void,
 ) => {
   auth.useDeviceLanguage();
   const provider = new GoogleAuthProvider();
@@ -151,6 +155,7 @@ const googleLogin = (
             recipesGenerated: 0,
             planRenewalDate: getCurrentDate(),
             premium: false,
+            profileImage: '',
           } as User;
 
           await setDoc(doc(firestore, collectionRef, userCredentials.uid), user);
@@ -160,9 +165,10 @@ const googleLogin = (
         }
 
         setUser(user as User);
+        await retrieveRecipes(user as User);
         setLoadingLog(false);
 
-        successHandling('Login successfull!', true, redirectDestiny);
+        successHandling('Login successfull!', true);
       }
     })
     .catch((err) => {
@@ -172,8 +178,7 @@ const googleLogin = (
 
 const authErrorHandling = (err: FirebaseError) => {
   let errorMessage = '';
-  // eslint-disable-next-line no-console
-  console.log(err);
+
   switch (err.code) {
     case 'auth/invalid-login-credentials':
       errorMessage = 'Invalid credentials. Please check your email and password.';
@@ -197,6 +202,14 @@ const authErrorHandling = (err: FirebaseError) => {
   return errorMessage;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const uploadNewPicture = async (storage: any, file: File | Blob) => {
+  const newProfilePicRef = ref(storage, `profilePics/${uuidv4()}`);
+
+  const upload = await uploadBytes(newProfilePicRef, file);
+  return getDownloadURL(upload.ref);
+};
+
 const UserService = {
   getUser,
   getUserByEmail,
@@ -205,6 +218,7 @@ const UserService = {
   login,
   googleLogin,
   authErrorHandling,
+  uploadNewPicture,
 };
 
 export default UserService;

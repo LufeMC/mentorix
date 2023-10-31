@@ -1,47 +1,76 @@
-import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
-import { Recipe } from '../types/recipe';
+import {
+  Firestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  setDoc,
+  startAfter,
+  where,
+} from 'firebase/firestore';
+import { Recipe, RecipeOptions } from '../types/recipe';
 import { ApiResponse, api } from './api.service';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../types/user';
 import UserService from './user.service';
 import { copyOrShareText } from '../utils/share';
 import { alertTypes } from '../stores/alertStore';
-import { TempUser } from '../types/tempUser';
-import IpAddressService from './ipAddress.service';
 
 const collectionRef = 'recipes';
 let retrievingRecipe = false;
 
 const createRecipe = async (
   text: string,
+  recipePreferences: RecipeOptions,
   firestore: Firestore,
   user: User | null,
   setUser: React.Dispatch<React.SetStateAction<User | null>>,
-  tempUser: TempUser | null,
-  setTempUser: React.Dispatch<React.SetStateAction<TempUser | null>>,
+  recipes: Recipe[],
+  setRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
+  communityRecipes: Recipe[],
+  setCommunityRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
+  todayCommunityRecipes: Recipe[],
+  setTodayCommunityRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
 ) => {
   const response = await api.post<ApiResponse<Recipe>>('recipe', {
     text,
     userId: user?.id,
-    tempUserId: tempUser?.userIpAddress,
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recipe: any = response.data;
+
+  const recipe: Recipe = response.data as unknown as Recipe;
   const recipeId = uuidv4();
   recipe.shareId = uuidv4();
+  recipe.creatorId = user?.id as string;
+  recipe.mealType = recipePreferences.mealType[0] ?? '';
+  recipe.cuisine = recipePreferences.cuisine[0] ?? '';
+  recipe.servings = recipePreferences.servings[0] ?? '';
+  recipe.dietRestrictions = recipePreferences.dietRestrictions;
+  recipe.likes = [user!.id as string];
+  recipe.img = recipe.img[0];
+  recipe.createdAt = Date.now();
 
   await setDoc(doc(firestore, collectionRef, recipeId), recipe);
 
   if (user) {
     const userCopy = structuredClone(user) as User;
-    await UserService.updateUser(firestore, { ...userCopy, recipesGenerated: userCopy.recipesGenerated + 1 }, setUser);
-  } else if (tempUser) {
-    const tempUserCopy = structuredClone(tempUser) as TempUser;
-    await IpAddressService.updateTempUser(
+    await UserService.updateUser(
       firestore,
-      { ...tempUserCopy, recipesGenerated: tempUserCopy.recipesGenerated + 1 },
-      setTempUser,
+      { ...userCopy, recipes: [...userCopy.recipes, recipeId], recipesGenerated: userCopy.recipesGenerated + 1 },
+      setUser,
     );
+    recipe.creator = userCopy;
+    setRecipes([...recipes, recipe]);
+
+    if (communityRecipes.length < 12) {
+      setCommunityRecipes([...communityRecipes, recipe]);
+    }
+
+    if (todayCommunityRecipes.length < 1) {
+      setTodayCommunityRecipes([recipe]);
+    }
   }
 
   recipe.id = recipeId;
@@ -71,17 +100,112 @@ const getRecipeById = async (firestore: Firestore, recipeId: string): Promise<Re
   return;
 };
 
-const getRecipes = async (firestore: Firestore, user: User): Promise<Recipe[]> => {
+const getRecipes = async (firestore: Firestore, user: User, page = 1): Promise<Recipe[]> => {
   const recipes: Recipe[] = [];
+  const slice = user.recipes.slice((page - 1) * 12, page * 12 + 1);
 
-  for (const recipe of user.recipes) {
+  for (const recipe of slice) {
     const retrievedRecipe = await getRecipeById(firestore, recipe);
     if (typeof retrievedRecipe !== 'string' && typeof retrievedRecipe !== 'undefined') {
+      if (retrievedRecipe.creatorId === user.id) {
+        retrievedRecipe.creator = user;
+      } else {
+        const creator = await UserService.getUser(firestore, retrievedRecipe.creatorId as string);
+        if (typeof creator !== 'string') {
+          retrievedRecipe.creator = creator;
+        }
+      }
+
       recipes.push(retrievedRecipe);
     }
   }
 
   return recipes;
+};
+
+const getTodaysCommunityRecipes = async (firestore: Firestore) => {
+  const todayCommunityRecipes: Recipe[] = [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set the time to the start of the day (midnight)
+  const endOfDay = new Date(today);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const recipesRef = collection(firestore, collectionRef);
+
+  const qToday = query(
+    recipesRef,
+    where('createdAt', '>=', today.getTime()),
+    where('createdAt', '<=', endOfDay.getTime()),
+  );
+
+  const querySnapshotToday = await getDocs(qToday);
+
+  if (!querySnapshotToday.empty) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const queryRecipes = querySnapshotToday.docs.map((doc: any) => doc.data() as unknown as Recipe);
+    queryRecipes.sort((a, b) => b.likes.length - a.likes.length);
+
+    // Get the top 3 liked recipes created today
+    const top3LikesToday = queryRecipes.slice(0, 3);
+    for (const recipe of top3LikesToday) {
+      const newRecipe = recipe as Recipe;
+      newRecipe.id = recipe.id;
+      const creator = await UserService.getUser(firestore, newRecipe.creatorId as string);
+
+      if (typeof creator !== 'string') {
+        newRecipe.creator = creator;
+
+        todayCommunityRecipes.push(newRecipe);
+      }
+    }
+  }
+
+  return todayCommunityRecipes;
+};
+
+const getCommunityRecipes = async (
+  firestore: Firestore,
+  page = 1,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  lastSnapshot: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<{ todayCommunityRecipes: Recipe[] | null; communityRecipes: Recipe[]; newSnapshot: any }> => {
+  const communityRecipes: Recipe[] = [];
+
+  const recipesRef = collection(firestore, collectionRef);
+  let snapshot;
+  let q;
+
+  if (lastSnapshot) {
+    q = query(recipesRef, orderBy('likes', 'desc'), startAfter(lastSnapshot), limit(11));
+  } else {
+    q = query(recipesRef, orderBy('likes', 'desc'), limit(13));
+  }
+  const querySnapshot = await getDocs(q);
+
+  if (!querySnapshot.empty) {
+    snapshot = querySnapshot.docs[querySnapshot.docs.length - 1];
+    for (const recipe of querySnapshot.docs) {
+      const newRecipe = recipe.data() as Recipe;
+      newRecipe.id = recipe.id;
+      const creator = await UserService.getUser(firestore, newRecipe.creatorId as string);
+
+      if (typeof creator !== 'string') {
+        newRecipe.creator = creator;
+
+        communityRecipes.push(newRecipe);
+      }
+    }
+  }
+
+  let todayCommunityRecipes = null;
+
+  if (page === 1) {
+    todayCommunityRecipes = await getTodaysCommunityRecipes(firestore);
+  }
+
+  return { todayCommunityRecipes, communityRecipes, newSnapshot: snapshot };
 };
 
 const bookmarkRecipe = async (
@@ -90,14 +214,13 @@ const bookmarkRecipe = async (
   setUser: React.Dispatch<React.SetStateAction<User | null>>,
   recipes: Recipe[],
   setRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
-  newRecipe?: Recipe,
   recipe?: Recipe,
 ) => {
   const currentUser = structuredClone(user);
-  if (currentUser) {
-    currentUser.recipes.push(newRecipe ? newRecipe.id : recipe!.id);
+  if (currentUser && recipe) {
+    currentUser.recipes.push(recipe!.id);
     UserService.updateUser(firestore, currentUser, setUser);
-    setRecipes([...recipes, newRecipe ? newRecipe : (recipe as Recipe)]);
+    setRecipes([...recipes, recipe]);
   }
 };
 
@@ -134,6 +257,7 @@ const RecipeService = {
   createRecipe,
   getRecipeById,
   getRecipes,
+  getCommunityRecipes,
   bookmarkRecipe,
   unBookmarkRecipe,
   shareRecipe,

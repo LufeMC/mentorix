@@ -1,15 +1,20 @@
-import { auth, analytics, firestore } from '../services/firebase';
+import { auth, analytics, firestore, storage } from '../services/firebase';
 import { createContext, ReactNode, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import UserService from '../services/user.service';
 import RecipeService from '../services/recipe.service';
 import { User } from '../types/user';
-import IpAddressService from '../services/ipAddress.service';
 import { getCurrentDate, isOneMonthAfter } from '../utils/date';
 import { UserAtom } from '../stores/userStore';
-import { RecipesAtom } from '../stores/recipesStore';
-import { useSetAtom } from 'jotai';
-import { TempUserAtom } from '../stores/tempUserStore';
+import {
+  CommunityRecipesAtom,
+  IsThereMoreCommunityRecipesAtom,
+  IsThereMoreRecipesAtom,
+  LastCommunityRecipeSnapshotAtom,
+  RecipesAtom,
+  TodayCommunityRecipesAtom,
+} from '../stores/recipesStore';
+import { useAtom, useSetAtom } from 'jotai';
 import { LoadingAtom } from '../stores/loadingStore';
 import MailchimpService from '../services/mailchimp.service';
 
@@ -21,6 +26,8 @@ interface FirebaseContextValue {
   auth: typeof auth;
   analytics: typeof analytics;
   firestore: typeof firestore;
+  storage: typeof storage;
+  retrieveRecipes: (_user: User) => void;
 }
 
 export const FirebaseContext = createContext<FirebaseContextValue>({} as FirebaseContextValue);
@@ -28,8 +35,12 @@ export const FirebaseContext = createContext<FirebaseContextValue>({} as Firebas
 export default function FirebaseProvider({ children }: FirebaseContextProps) {
   const [user, loading] = useAuthState(auth);
   const setUserAtom = useSetAtom(UserAtom);
-  const setRecipes = useSetAtom(RecipesAtom);
-  const setTempUser = useSetAtom(TempUserAtom);
+  const [recipesAtom, setRecipes] = useAtom(RecipesAtom);
+  const setMoreRecipes = useSetAtom(IsThereMoreRecipesAtom);
+  const [communityRecipesAtom, setCommunityRecipes] = useAtom(CommunityRecipesAtom);
+  const [lastCommunityRecipeSnapshot, setLastCommunityRecipeSnapshot] = useAtom(LastCommunityRecipeSnapshotAtom);
+  const setMoreCommunityRecipes = useSetAtom(IsThereMoreCommunityRecipesAtom);
+  const setTodayCommunityRecipes = useSetAtom(TodayCommunityRecipesAtom);
   const setLoadingLog = useSetAtom(LoadingAtom);
 
   useEffect(() => {
@@ -38,25 +49,35 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
     if (!loading) {
       setRecipes([]);
       setUserAtom(null);
-      setTempUser(null);
 
       if (user) {
         retrieveUser(user);
-      } else {
-        retrieveTempUser();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
-  const retrieveTempUser = async () => {
-    await IpAddressService.retrieveTempUser(firestore, setTempUser);
-    setLoadingLog(false);
-  };
-
   const retrieveRecipes = async (user: User) => {
     const recipes = await RecipeService.getRecipes(firestore, user);
-    setRecipes(recipes);
+    const communityRecipesObj = await RecipeService.getCommunityRecipes(firestore, 1, lastCommunityRecipeSnapshot);
+    setLastCommunityRecipeSnapshot(communityRecipesObj.newSnapshot);
+    setRecipes([...recipesAtom, ...recipes.slice(0, recipes.length > 12 ? recipes.length - 1 : recipes.length)]);
+    setMoreRecipes(recipes.length > 12);
+
+    setCommunityRecipes([
+      ...communityRecipesAtom,
+      ...communityRecipesObj.communityRecipes.slice(
+        0,
+        communityRecipesObj.communityRecipes.length > 12
+          ? communityRecipesObj.communityRecipes.length - 1
+          : communityRecipesObj.communityRecipes.length,
+      ),
+    ]);
+    setMoreCommunityRecipes(communityRecipesObj.communityRecipes.length > 12);
+
+    if (communityRecipesObj.todayCommunityRecipes) {
+      setTodayCommunityRecipes(communityRecipesObj.todayCommunityRecipes);
+    }
   };
 
   const checkIf1MonthLaterAndRenew = async (user: User) => {
@@ -83,9 +104,9 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
     const newUser = await UserService.getUser(firestore, user.uid);
 
     if (typeof newUser !== 'string' && user.emailVerified) {
+      await retrieveRecipes(newUser);
       setUserAtom(newUser);
       setLoadingLog(false);
-      retrieveRecipes(newUser);
       await checkIf1MonthLaterAndRenew(newUser);
     }
   };
@@ -94,6 +115,8 @@ export default function FirebaseProvider({ children }: FirebaseContextProps) {
     auth,
     analytics,
     firestore,
+    storage,
+    retrieveRecipes,
   };
 
   return <FirebaseContext.Provider value={value}>{children}</FirebaseContext.Provider>;

@@ -1,4 +1,4 @@
-import db from '..';
+import firebase from '..';
 import { ApiResponse, stripeApi } from '../integrations/stripe';
 import { mailchimp_handler } from '../mailchimp_add_user';
 import { CheckoutSession } from '../types/stripe';
@@ -16,7 +16,7 @@ const getSessionResult = async (sessionId: string) => {
 const cancelPackage = async (customerId: string) => {
   if (!updating) {
     updating = true;
-    const userQuery = await db
+    const userQuery = await firebase.db
       .collection('users')
       .where('customerId', '==', customerId)
       .get();
@@ -26,7 +26,10 @@ const cancelPackage = async (customerId: string) => {
       user.renewed = false;
       await mailchimp_handler({ user });
 
-      await db.collection('users').doc(userQuery.docs[0].id).update(user);
+      await firebase.db
+        .collection('users')
+        .doc(userQuery.docs[0].id)
+        .update(user);
     }
 
     updating = false;
@@ -36,7 +39,7 @@ const cancelPackage = async (customerId: string) => {
 const renewPackage = async (customerId: string) => {
   if (!updating) {
     updating = true;
-    const userQuery = await db
+    const userQuery = await firebase.db
       .collection('users')
       .where('customerId', '==', customerId)
       .get();
@@ -46,7 +49,10 @@ const renewPackage = async (customerId: string) => {
       user.renewed = true;
       await mailchimp_handler({ user, plan_renewed: true });
 
-      await db.collection('users').doc(userQuery.docs[0].id).update(user);
+      await firebase.db
+        .collection('users')
+        .doc(userQuery.docs[0].id)
+        .update(user);
     }
 
     updating = false;

@@ -2,89 +2,118 @@
 
 .navbar {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   align-content: center;
-  justify-content: space-between;
-  padding: 0.5rem 1rem;
+  justify-content: flex-end;
+  padding: 0 2.5rem;
 
-  .mainOptions {
-    display: flex;
-    align-items: center;
-    align-content: center;
-    justify-content: center;
-    gap: 1.5rem;
-
-    @media only screen and (max-width: 700px) {
-      gap: 1rem;
-    }
-
-    img {
-      height: 50px;
-
-      @media only screen and (max-width: 700px) {
-        height: 30px;
-      }
-    }
-
-    & > div {
-      display: flex;
-      align-items: center;
-      align-content: center;
-      justify-content: flex-start;
-      gap: 1rem;
-    }
+  @media only screen and (max-width: 700px) {
+    padding: 0 1rem;
   }
 
-  .logOptions {
+  .actions {
+    width: 100%;
     display: flex;
     align-items: center;
     align-content: center;
     justify-content: flex-end;
-    gap: 1rem;
-
-    svg {
-      height: 20px;
-      width: 20px;
-    }
-  }
-
-  a,
-  button {
-    font-weight: bold;
-    text-decoration: none;
-    font-size: 0.9rem;
-    cursor: pointer;
-    color: $black;
-    transition: 0.3s all;
-    padding: 0;
-    border: 0;
-    outline: none;
-    background: transparent;
+    gap: 1.5rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid $light-grey;
 
     @media only screen and (max-width: 700px) {
-      font-size: 0.8rem;
+      justify-content: space-between;
     }
 
-    &:hover {
-      color: $light-middle-grey;
+    a {
+      text-decoration: none;
+    }
+
+    .profile {
+      position: relative;
+
+      .name {
+        display: flex;
+        align-items: center;
+        align-content: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 0;
+        outline: none !important;
+        background: transparent;
+        font-size: 1rem;
+        color: $black;
+        cursor: pointer;
+
+        h4:hover {
+          color: $light-middle-grey;
+        }
+
+        .profileImg {
+          height: 30px;
+          width: 30px;
+          border-radius: 100%;
+          border: $black 1px solid;
+          display: flex;
+          align-content: center;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+
+          img {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+          }
+        }
+      }
     }
   }
 
-  &.creatingRecipe {
-    a,
-    button {
-      cursor: default;
-      color: $light-grey;
+  &.loadingLog {
+    .actions {
+      a {
+        cursor: default;
+
+        h4,
+        svg {
+          color: transparent !important;
+        }
+      }
+
+      .profile {
+        .name {
+          cursor: default;
+        }
+      }
     }
   }
 
-  &.darkSchema {
-    a,
-    button {
-      color: $white;
+  &.loadingRecipe {
+    .actions {
+      a {
+        cursor: default;
 
-      &:hover {
-        color: $light-grey;
+        h4,
+        svg {
+          color: $light-grey !important;
+        }
+      }
+
+      .profile {
+        .name {
+          cursor: default;
+        }
+      }
+    }
+  }
+
+  &.recipeImageOpen {
+    .actions {
+      .profile {
+        .name {
+          color: $white;
+        }
       }
     }
   }

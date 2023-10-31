@@ -10,6 +10,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+body {
   background: linear-gradient(114deg, #f9fafc 3.5%, #ece7e8 92.16%);
 }
 

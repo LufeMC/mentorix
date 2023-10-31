@@ -4,7 +4,10 @@ import MainLayout from './pages/mainLayout/MainLayout';
 import RecipePage from './pages/mainLayout/recipes/recipe/RecipePage';
 import HomePage from './pages/mainLayout/home/HomePage';
 import RecipesPage from './pages/mainLayout/recipes/RecipesPage';
-import Plans from './pages/mainLayout/plans/Plans';
+import Profile from './pages/mainLayout/profile/Profile';
+import CreateRecipe from './pages/mainLayout/recipes/createRecipe/CreateRecipe';
+import PaymentConfirmation from './pages/mainLayout/paymentConfirmation/PaymentConfirmation';
+import CommunityPage from './pages/mainLayout/community/CommunityPage';
 
 const router = createBrowserRouter([
   {
@@ -20,14 +23,26 @@ const router = createBrowserRouter([
         element: <RecipesPage />,
       },
       {
-        path: 'plans/:checkoutSessionId?',
-        element: <Plans />,
+        path: 'recipes/:recipeId',
+        element: <RecipePage />,
+      },
+      {
+        path: 'recipes/new',
+        element: <CreateRecipe />,
+      },
+      {
+        path: 'profile',
+        element: <Profile />,
+      },
+      {
+        path: 'community',
+        element: <CommunityPage />,
+      },
+      {
+        path: 'payment-confirmation/:checkoutSessionId?',
+        element: <PaymentConfirmation />,
       },
     ],
-  },
-  {
-    path: '/recipes/:recipeId/:shareId?',
-    element: <RecipePage />,
   },
   {
     path: '/auth',

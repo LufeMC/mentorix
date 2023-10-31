@@ -1,0 +1,29 @@
+@import '../../assets/styles/variables.scss';
+
+.shimmerText {
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: fit-content;
+  background: linear-gradient(90deg, $white 25%, $light-grey 50%, $white 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 20px;
+  color: transparent;
+  cursor: default;
+
+  * {
+    color: transparent !important;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
