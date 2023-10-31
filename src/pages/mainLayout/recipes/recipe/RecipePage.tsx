@@ -15,6 +15,8 @@ import { useAtom, useSetAtom } from 'jotai';
 import { UserAtom } from '../../../../stores/userStore';
 import { logEvent } from 'firebase/analytics';
 import { CurrentPageAtom } from '../../../../stores/loadingStore';
+import { AiFillLike, AiOutlineLike } from 'react-icons/ai';
+import { User } from '../../../../types/user';
 
 export default function RecipePage() {
   const firebaseContext = useContext(FirebaseContext);
@@ -23,6 +25,8 @@ export default function RecipePage() {
   const navigate = useNavigate();
   const [user, setUser] = useAtom(UserAtom);
   const [recipes, setRecipes] = useAtom(RecipesAtom);
+  const [communityRecipes, setCommunityRecipes] = useAtom(RecipesAtom);
+  const [todaysCommunityRecipes, setTodaysCommunityRecipes] = useAtom(RecipesAtom);
   const [recipe, setRecipe] = useAtom(RecipeAtom);
   const setCurrentPage = useSetAtom(CurrentPageAtom);
 
@@ -128,6 +132,38 @@ export default function RecipePage() {
     }
   };
 
+  const likeRecipe = async () => {
+    const newRecipe = await RecipeService.likeRecipe(
+      firebaseContext.firestore,
+      user as User,
+      recipe as Recipe,
+      recipes,
+      communityRecipes,
+      todaysCommunityRecipes,
+      setRecipes,
+      setCommunityRecipes,
+      setTodaysCommunityRecipes,
+    );
+
+    setRecipe(newRecipe);
+  };
+
+  const unlikeRecipe = async () => {
+    const newRecipe = await RecipeService.unlikeRecipe(
+      firebaseContext.firestore,
+      user as User,
+      recipe as Recipe,
+      recipes,
+      communityRecipes,
+      todaysCommunityRecipes,
+      setRecipes,
+      setCommunityRecipes,
+      setTodaysCommunityRecipes,
+    );
+
+    setRecipe(newRecipe);
+  };
+
   return (
     <div className={`${styles.recipe} ${recipe && !recipe.img ? styles.recipeNoImage : ''}`}>
       {recipe && (
@@ -167,6 +203,19 @@ export default function RecipePage() {
                 <BsTrash onClick={() => unbookmarkRecipe(true)} />
               ) : null}
               <LuShare onClick={() => shareRecipe()} />
+              {user ? (
+                recipe.likes.includes(user!.id as string) ? (
+                  <div className={styles.like}>
+                    <AiFillLike onClick={() => unlikeRecipe()} />
+                    <span>{recipe.likes.length}</span>
+                  </div>
+                ) : (
+                  <div className={styles.like}>
+                    <AiOutlineLike onClick={() => likeRecipe()} />
+                    <span>{recipe.likes.length}</span>
+                  </div>
+                )
+              ) : null}
             </div>
           </div>
         </div>

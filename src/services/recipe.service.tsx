@@ -9,6 +9,7 @@ import {
   query,
   setDoc,
   startAfter,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import { Recipe, RecipeOptions } from '../types/recipe';
@@ -253,6 +254,110 @@ const shareRecipe = (
   );
 };
 
+const likeRecipe = async (
+  firestore: Firestore,
+  user: User,
+  recipe: Recipe,
+  recipes: Recipe[],
+  communityRecipes: Recipe[],
+  todaysCommunityRecipes: Recipe[],
+  setRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
+  setCommunityRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
+  setTodayCommunityRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
+) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const newRecipe: any = structuredClone(recipe);
+  const newLikes: string[] = [...new Set([...newRecipe.likes, user.id as string])];
+  newRecipe.likes = newLikes;
+  delete newRecipe.id;
+  delete newRecipe.creator;
+
+  await updateDoc(doc(firestore, collectionRef, recipe.id), newRecipe);
+  setRecipes(
+    recipes.map((recipeRef) => {
+      if (recipeRef.id === recipe.id) {
+        recipeRef.likes = newLikes;
+      }
+
+      return recipeRef;
+    }),
+  );
+
+  setCommunityRecipes(
+    communityRecipes.map((recipeRef) => {
+      if (recipeRef.id === recipe.id) {
+        recipeRef.likes = newLikes;
+      }
+
+      return recipeRef;
+    }),
+  );
+
+  setTodayCommunityRecipes(
+    todaysCommunityRecipes.map((recipeRef) => {
+      if (recipeRef.id === recipe.id) {
+        recipeRef.likes = newLikes;
+      }
+
+      return recipeRef;
+    }),
+  );
+
+  return { ...recipe, ...newRecipe };
+};
+
+const unlikeRecipe = async (
+  firestore: Firestore,
+  user: User,
+  recipe: Recipe,
+  recipes: Recipe[],
+  communityRecipes: Recipe[],
+  todaysCommunityRecipes: Recipe[],
+  setRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
+  setCommunityRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
+  setTodayCommunityRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
+) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const newRecipe: any = structuredClone(recipe);
+  const newLikes: string[] = newRecipe.likes.filter((like: string) => like !== user.id);
+  newRecipe.likes = newLikes;
+  delete newRecipe.id;
+  delete newRecipe.creator;
+
+  await updateDoc(doc(firestore, collectionRef, recipe.id), newRecipe);
+  setRecipes(
+    recipes.map((recipeRef) => {
+      if (recipeRef.id === recipe.id) {
+        recipeRef.likes = newLikes;
+      }
+
+      return recipeRef;
+    }),
+  );
+
+  setCommunityRecipes(
+    communityRecipes.map((recipeRef) => {
+      if (recipeRef.id === recipe.id) {
+        recipeRef.likes = newLikes;
+      }
+
+      return recipeRef;
+    }),
+  );
+
+  setTodayCommunityRecipes(
+    todaysCommunityRecipes.map((recipeRef) => {
+      if (recipeRef.id === recipe.id) {
+        recipeRef.likes = newLikes;
+      }
+
+      return recipeRef;
+    }),
+  );
+
+  return { ...recipe, ...newRecipe };
+};
+
 const RecipeService = {
   createRecipe,
   getRecipeById,
@@ -261,6 +366,8 @@ const RecipeService = {
   bookmarkRecipe,
   unBookmarkRecipe,
   shareRecipe,
+  likeRecipe,
+  unlikeRecipe,
 };
 
 export default RecipeService;
