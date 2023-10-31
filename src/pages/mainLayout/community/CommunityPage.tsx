@@ -101,7 +101,7 @@ export default function CommunityPage() {
             </div>
           </div>
         </div>
-      ) : !userAtom?.premium ? (
+      ) : userAtom?.premium ? (
         <div className={styles.recipesCommunityContent}>
           <div className={styles.todayContainer}>
             <h2>Today&#39;s top recipe</h2>
