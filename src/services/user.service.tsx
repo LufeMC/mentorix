@@ -9,8 +9,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth';
-import { getCurrentDate } from '../utils/date';
-import MailchimpService from './mailchimp.service';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -65,86 +63,52 @@ const updateUser = async (
   return 'No user provided';
 };
 
-const signUp = async (
-  auth: typeof authType,
-  firestore: Firestore,
-  newUser: UserLogin,
-  errorHandling: (_error: string) => void,
-  successHandling: (_success: string, _redirect: boolean) => void,
-) => {
-  createUserWithEmailAndPassword(auth, newUser.email, newUser.password)
+const signUp = async (auth: typeof authType, firestore: Firestore, newUser: UserLogin) => {
+  return createUserWithEmailAndPassword(auth, newUser.email, newUser.password)
     .then(async (userCredentials) => {
       const user = {
         ...newUser,
-        recipes: [],
-        recipesGenerated: 0,
-        planRenewalDate: getCurrentDate(),
-        premium: false,
-        profileImage: '',
       } as User;
       delete user.password;
 
       await setDoc(doc(firestore, collectionRef, userCredentials.user.uid), user);
       await sendEmailVerification(userCredentials.user);
-      await MailchimpService.setMailchimp(user);
-      successHandling('Sign up successfull! Now, enter your email and verify your account', false);
     })
     .catch((err) => {
-      errorHandling(UserService.authErrorHandling(err));
+      throw new Error(UserService.authErrorHandling(err));
     });
 };
 
-const login = async (
-  auth: typeof authType,
-  firestore: Firestore,
-  attemptedUser: UserLogin,
-  setUser: React.Dispatch<React.SetStateAction<User | null>>,
-  setLoadingLog: React.Dispatch<React.SetStateAction<boolean>>,
-  errorHandling: (_error: string) => void,
-  successHandling: (_success: string, _redirect: boolean, _redirectDestiny?: string) => void,
-  retrieveRecipes: (_user: User) => void,
-) => {
-  signInWithEmailAndPassword(auth, attemptedUser.email, attemptedUser.password)
+const login = async (auth: typeof authType, firestore: Firestore, attemptedUser: UserLogin) => {
+  return signInWithEmailAndPassword(auth, attemptedUser.email, attemptedUser.password)
     .then(async (userCredentials) => {
       if (userCredentials.user.emailVerified) {
-        setLoadingLog(true);
         const user = await UserService.getUser(firestore, userCredentials.user.uid);
 
         if (user && typeof user !== 'string') {
           user.id = userCredentials.user.uid;
-          setUser(user);
-          await retrieveRecipes(user as User);
-          setLoadingLog(false);
-
-          successHandling('Login successfull!', true);
+          return user;
         }
+
+        throw new Error('User now found');
       } else {
-        errorHandling('Please validate your email before continuing');
+        throw new Error('Please validate your email before continuing');
       }
     })
     .catch((err) => {
-      errorHandling(UserService.authErrorHandling(err));
+      throw new Error(authErrorHandling(err));
     });
 };
 
-const googleLogin = (
-  auth: typeof authType,
-  firestore: Firestore,
-  setUser: React.Dispatch<React.SetStateAction<User | null>>,
-  setLoadingLog: React.Dispatch<React.SetStateAction<boolean>>,
-  errorHandling: (_error: string) => void,
-  successHandling: (_success: string, _redirect: boolean, _redirectDestiny?: string) => void,
-  retrieveRecipes: (_user: User) => void,
-) => {
+const googleLogin = (auth: typeof authType, firestore: Firestore) => {
   auth.useDeviceLanguage();
   const provider = new GoogleAuthProvider();
 
-  signInWithPopup(auth, provider)
+  return signInWithPopup(auth, provider)
     .then(async (result) => {
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential) {
         const userCredentials = result.user;
-        setLoadingLog(true);
 
         const existingUser = await getUser(firestore, userCredentials.uid);
         let user = existingUser;
@@ -153,28 +117,21 @@ const googleLogin = (
           user = {
             name: userCredentials.displayName,
             email: userCredentials.email,
-            recipes: [],
-            recipesGenerated: 0,
-            planRenewalDate: getCurrentDate(),
-            premium: false,
             profileImage: '',
           } as User;
 
           await setDoc(doc(firestore, collectionRef, userCredentials.uid), user);
-          await MailchimpService.setMailchimp(user);
 
           user.id = userCredentials.uid;
         }
 
-        setUser(user as User);
-        await retrieveRecipes(user as User);
-        setLoadingLog(false);
-
-        successHandling('Login successfull!', true);
+        return user as User;
       }
+
+      throw new Error('No credential found');
     })
     .catch((err) => {
-      errorHandling(UserService.authErrorHandling(err));
+      throw new Error(authErrorHandling(err));
     });
 };
 

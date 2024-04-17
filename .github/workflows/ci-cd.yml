@@ -3,8 +3,8 @@ name: CI/CD
 on: push
 
 jobs:
-  build_deploy_cookii_api_testing:
-    name: Build & Deploy Cookii API Test
+  build_deploy_mentorix_api_testing:
+    name: Build & Deploy Mentorix API Test
     runs-on: ${{ matrix.os }}
     if: github.ref != 'refs/heads/main'
 
@@ -26,7 +26,7 @@ jobs:
       - name: Switch to Testing Alias
         uses: w9jds/firebase-action@master
         with:
-          args: use cookii-test
+          args: use mentorix-test
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
@@ -45,12 +45,12 @@ jobs:
       - name: Deploy Test Functions
         uses: w9jds/firebase-action@master
         with:
-          args: deploy --only functions:cookiiAPI
+          args: deploy --only functions:mentorixAPI
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
-  build_deploy_cookii_api_prod:
-    name: Build & Deploy Cookii API Prod
+  build_deploy_mentorix_api_prod:
+    name: Build & Deploy Mentorix API Prod
     runs-on: ${{ matrix.os }}
     if: github.ref == 'refs/heads/main'
 
@@ -72,7 +72,7 @@ jobs:
       - name: Switch to Prod Alias
         uses: w9jds/firebase-action@master
         with:
-          args: use cookii-dev
+          args: use mentorix-dev
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
@@ -91,7 +91,7 @@ jobs:
       - name: Deploy Prod Functions
         uses: w9jds/firebase-action@master
         with:
-          args: deploy --only functions:cookiiAPI
+          args: deploy --only functions:mentorixAPI
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
@@ -143,7 +143,7 @@ jobs:
       - name: Switch to Testing Alias
         uses: w9jds/firebase-action@master
         with:
-          args: 'use cookii-test'
+          args: 'use mentorix-test'
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
@@ -202,7 +202,7 @@ jobs:
       - name: Switch to Prod Alias
         uses: w9jds/firebase-action@master
         with:
-          args: 'use cookii-dev'
+          args: 'use mentorix-dev'
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 

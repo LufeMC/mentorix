@@ -1,22 +1,12 @@
-import { auth, analytics, firestore, storage } from '../services/firebase';
-import { createContext, ReactNode, useEffect } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import UserService from '../services/user.service';
-import RecipeService from '../services/recipe.service';
-import { User } from '../types/user';
-import { getCurrentDate, isOneMonthAfter } from '../utils/date';
-import { UserAtom } from '../stores/userStore';
-import {
-  CommunityRecipesAtom,
-  IsThereMoreCommunityRecipesAtom,
-  IsThereMoreRecipesAtom,
-  LastCommunityRecipeSnapshotAtom,
-  RecipesAtom,
-  TodayCommunityRecipesAtom,
-} from '../stores/recipesStore';
-import { useAtom, useSetAtom } from 'jotai';
-import { LoadingAtom } from '../stores/loadingStore';
-import MailchimpService from '../services/mailchimp.service';
+import { auth, firestore } from '../services/firebase';
+import { createContext, ReactNode } from 'react';
+// import { createContext, ReactNode, useEffect, useState } from 'react';
+// import { useAuthState } from 'react-firebase-hooks/auth';
+// import UserService from '../services/user.service';
+// import { UserAtom } from '../stores/userStore';
+// import { useSetAtom } from 'jotai';
+// import { useToast } from '@/components/ui/use-toast';
+// import { ReloadIcon } from '@radix-ui/react-icons';
 
 interface FirebaseContextProps {
   children?: ReactNode;
@@ -24,100 +14,66 @@ interface FirebaseContextProps {
 
 interface FirebaseContextValue {
   auth: typeof auth;
-  analytics: typeof analytics;
   firestore: typeof firestore;
-  storage: typeof storage;
-  retrieveRecipes: (_user: User) => void;
 }
 
 export const FirebaseContext = createContext<FirebaseContextValue>({} as FirebaseContextValue);
 
 export default function FirebaseProvider({ children }: FirebaseContextProps) {
-  const [user, loading] = useAuthState(auth);
-  const setUserAtom = useSetAtom(UserAtom);
-  const [recipesAtom, setRecipes] = useAtom(RecipesAtom);
-  const setMoreRecipes = useSetAtom(IsThereMoreRecipesAtom);
-  const [communityRecipesAtom, setCommunityRecipes] = useAtom(CommunityRecipesAtom);
-  const [lastCommunityRecipeSnapshot, setLastCommunityRecipeSnapshot] = useAtom(LastCommunityRecipeSnapshotAtom);
-  const setMoreCommunityRecipes = useSetAtom(IsThereMoreCommunityRecipesAtom);
-  const setTodayCommunityRecipes = useSetAtom(TodayCommunityRecipesAtom);
-  const setLoadingLog = useSetAtom(LoadingAtom);
+  // const [user, loading] = useAuthState(auth);
+  // const setUserAtom = useSetAtom(UserAtom);
+  // const [isUserRetrieved, setIsUserRetrieved] = useState(false);
+  // const { toast } = useToast();
 
-  useEffect(() => {
-    setLoadingLog(true);
+  // useEffect(() => {
+  //   if (!loading) {
+  //     setUserAtom(null);
 
-    if (!loading) {
-      setRecipes([]);
-      setUserAtom(null);
+  //     if (user) {
+  //       retrieveUser(user);
+  //     }
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [loading]);
 
-      if (user) {
-        retrieveUser(user);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  // // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // const retrieveUser = async (user: any) => {
+  //   const newUser = await UserService.getUser(firestore, user.uid);
 
-  const retrieveRecipes = async (user: User) => {
-    const recipes = await RecipeService.getRecipes(firestore, user);
-    const communityRecipesObj = await RecipeService.getCommunityRecipes(firestore, 1, lastCommunityRecipeSnapshot);
-    setLastCommunityRecipeSnapshot(communityRecipesObj.newSnapshot);
-    setRecipes([...recipesAtom, ...recipes.slice(0, recipes.length > 12 ? recipes.length - 1 : recipes.length)]);
-    setMoreRecipes(recipes.length > 12);
+  //   if (newUser && typeof newUser !== 'string' && user.emailVerified) {
+  //     setUserAtom(newUser);
+  //   } else if (
+  //     newUser &&
+  //     typeof newUser !== 'string' &&
+  //     !user.emailVerified &&
+  //     !window.location.href.includes('auth')
+  //   ) {
+  //     toast({
+  //       title: 'Please verify your email first',
+  //     });
+  //     window.location.href = '/auth';
+  //   } else if (!window.location.href.includes('auth')) {
+  //     window.location.href = '/auth';
+  //   }
 
-    setCommunityRecipes([
-      ...communityRecipesAtom,
-      ...communityRecipesObj.communityRecipes.slice(
-        0,
-        communityRecipesObj.communityRecipes.length > 12
-          ? communityRecipesObj.communityRecipes.length - 1
-          : communityRecipesObj.communityRecipes.length,
-      ),
-    ]);
-    setMoreCommunityRecipes(communityRecipesObj.communityRecipes.length > 12);
-
-    if (communityRecipesObj.todayCommunityRecipes) {
-      setTodayCommunityRecipes(communityRecipesObj.todayCommunityRecipes);
-    }
-  };
-
-  const checkIf1MonthLaterAndRenew = async (user: User) => {
-    if (user) {
-      const shouldRenewThePlan = isOneMonthAfter(getCurrentDate(), user!.planRenewalDate);
-      if (shouldRenewThePlan) {
-        const userCopy = structuredClone(user);
-        userCopy!.planRenewalDate = getCurrentDate();
-        userCopy.recipesGenerated - 0;
-
-        if (!userCopy!.renewed) {
-          userCopy.premium = false;
-
-          await MailchimpService.setMailchimp(userCopy);
-        }
-
-        UserService.updateUser(firestore, userCopy as User, setUserAtom);
-      }
-    }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const retrieveUser = async (user: any) => {
-    const newUser = await UserService.getUser(firestore, user.uid);
-
-    if (newUser && typeof newUser !== 'string' && user.emailVerified) {
-      await retrieveRecipes(newUser);
-      setUserAtom(newUser);
-      setLoadingLog(false);
-      await checkIf1MonthLaterAndRenew(newUser);
-    }
-  };
+  //   setIsUserRetrieved(true);
+  // };
 
   const value: FirebaseContextValue = {
     auth,
-    analytics,
     firestore,
-    storage,
-    retrieveRecipes,
   };
 
-  return <FirebaseContext.Provider value={value}>{children}</FirebaseContext.Provider>;
+  return (
+    <FirebaseContext.Provider value={value}>
+      {/* {isUserRetrieved ? (
+        children
+      ) : (
+        <div className="w-full h-full flex items-center content-center justify-center">
+          <ReloadIcon className="mr-2 h-7 w-7 animate-spin" />
+        </div>
+      )} */}
+      {children}
+    </FirebaseContext.Provider>
+  );
 }

@@ -24,10 +24,13 @@
     "firebase-functions": "^3.21.0",
     "mailchimp-api-v3": "^1.15.0",
     "md5": "^2.3.0",
+    "node-fetch": "^3.3.2",
+    "node-html-parser": "^6.1.13",
     "openai": "^4.12.4",
     "pg": "^8.7.3",
     "short-unique-id": "^4.4.4",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "youtube-transcript": "^1.1.0"
   },
   "devDependencies": {
     "@types/md5": "^2.3.2",
